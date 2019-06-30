@@ -88,7 +88,7 @@ function ifsf_readcube,infile,header=header,quiet=quiet,oned=oned,$
                        datext=datext,varext=varext,dqext=dqext,$
                        vormap=vormap,error=error,waveext=waveext,$
                        invvar=invvar,zerodq=zerodq,linearize=linearize,$
-                       gooddq=gooddq
+                       gooddq=gooddq,airtovac=airtovac,helio=helio
 
   if ~ keyword_set(quiet) then print,'IFSF_READCUBE: Loading data.'
 
@@ -253,7 +253,29 @@ function ifsf_readcube,infile,header=header,quiet=quiet,oned=oned,$
      ibd = where(dq gt 0.01,ctbd)
      if ctbd gt 0 then dq[ibd] = 1
   endif
-  
+
+  if keyword_set(airtovac) then begin
+     airtovac,wave
+     print,'IFSF_READCUBE: Converted air wavelengths to vacuum wavelengths.'
+  endif
+
+  if keyword_set(helio) then begin
+     print,'IFSF_READCUBE: Heliocentric correction assumes location is Keck.'
+     x_radec,sxpar(header_dat,'RA'),sxpar(header_dat,'DEC'),rad,decd
+     jd = sxpar(header_dat,'MJD')+2400000.5D
+     equinox = sxpar(header_dat,'EQUINOX')
+     observatory,'keck',obs_struct
+     longitude = 360.0d - obs_struct.longitude
+     latitude = obs_struct.latitude
+     altitude = obs_struct.altitude
+     helio = heliocentric(rad,decd,equinox,jd=jd,longitude=longitude,$
+                          latitude=latitude,altitude=altitude)
+     helio = -1.0d * helio
+     helio_corr = sqrt((1.0d + helio/299792.458d)/(1.0d - helio/299792.458d))
+     wave = wave*helio_corr
+     print,'IFSF_READCUBE: Heliocentric correction, in km/s:',helio
+  endif
+
   cube = { $
          phu:  phu,$
          dat:  dat,$
