@@ -94,10 +94,10 @@ pro ifsf_printlinpar,outlines,lun,col,row,maxncomp,linepars,outfile=outfile
       for i=0,maxncomp-1 do begin
          linestr=''
          foreach line,outlines do begin
-            linestr += string(linepars.flux[line,i],$
-                              linepars.fluxerr[line,i],$
-                              linepars.wave[line,i],$
-                              linepars.sigma[line,i],$
+            linestr += string((linepars.flux)[line,i],$
+                              (linepars.fluxerr)[line,i],$
+                              (linepars.wave)[line,i],$
+                              (linepars.sigma)[line,i],$
                               format='(E12.4,E12.4,D12.2,D12.2)')
          endforeach
          printf,lun,col,row,i+1,linestr,format='(3I-4,A0)'

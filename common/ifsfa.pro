@@ -401,8 +401,8 @@ pro ifsfa,initproc,cols=cols,rows=rows,noplots=noplots,oned=oned,$
            thisncomp = 0
            thisncompline = ''
            foreach line,lines_with_doublets do begin
-             sigtmp = linepars.sigma[line,*]
-             fluxtmp = linepars.flux[line,*]
+             sigtmp = (linepars.sigma)[line,*]
+             fluxtmp = (linepars.flux)[line,*]
              igd = where(sigtmp ne 0d AND sigtmp ne bad AND $
                          fluxtmp ne 0d AND fluxtmp ne bad,ctgd)
              if ctgd gt thisncomp then begin
@@ -411,9 +411,9 @@ pro ifsfa,initproc,cols=cols,rows=rows,noplots=noplots,oned=oned,$
              endif
 ;            Assign total fluxes
              if ctgd gt 0 then begin
-                emlweq['ftot',line,i,j]=lineweqs.tot[line]
-                emlflx['ftot',line,i,j]=tflux.tflux[line]
-                emlflxerr['ftot',line,i,j]=tflux.tfluxerr[line]
+                emlweq['ftot',line,i,j]=(lineweqs.tot)[line]
+                emlflx['ftot',line,i,j]=(tflux.tflux)[line]
+                emlflxerr['ftot',line,i,j]=(tflux.tfluxerr)[line]
              endif
            endforeach
            if thisncomp eq 1 then begin
@@ -448,15 +448,15 @@ pro ifsfa,initproc,cols=cols,rows=rows,noplots=noplots,oned=oned,$
                 kcomp = 1
                 foreach sindex,isort do begin
                    cstr='c'+string(kcomp,format='(I0)')
-                   emlwav[cstr,line,i,j]=linepars.wave[line,sindex]
-                   emlwaverr[cstr,line,i,j]=linepars.waveerr[line,sindex]
-                   emlsig[cstr,line,i,j]=linepars.sigma[line,sindex]
-                   emlsigerr[cstr,line,i,j]=linepars.sigmaerr[line,sindex]
-                   emlweq['f'+cstr,line,i,j]=lineweqs.comp[line,sindex]
-                   emlflx['f'+cstr,line,i,j]=linepars.flux[line,sindex]
-                   emlflxerr['f'+cstr,line,i,j]=linepars.fluxerr[line,sindex]
-                   emlflx['f'+cstr+'pk',line,i,j]=linepars.fluxpk[line,sindex]
-                   emlflxerr['f'+cstr+'pk',line,i,j]=linepars.fluxpkerr[line,sindex]
+                   emlwav[cstr,line,i,j]=(linepars.wave)[line,sindex]
+                   emlwaverr[cstr,line,i,j]=(linepars.waveerr)[line,sindex]
+                   emlsig[cstr,line,i,j]=(linepars.sigma)[line,sindex]
+                   emlsigerr[cstr,line,i,j]=(linepars.sigmaerr)[line,sindex]
+                   emlweq['f'+cstr,line,i,j]=(lineweqs.comp)[line,sindex]
+                   emlflx['f'+cstr,line,i,j]=(linepars.flux)[line,sindex]
+                   emlflxerr['f'+cstr,line,i,j]=(linepars.fluxerr)[line,sindex]
+                   emlflx['f'+cstr+'pk',line,i,j]=(linepars.fluxpk)[line,sindex]
+                   emlflxerr['f'+cstr+'pk',line,i,j]=(linepars.fluxpkerr)[line,sindex]
                    kcomp++
                  endforeach
               endforeach

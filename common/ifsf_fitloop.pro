@@ -170,16 +170,16 @@ pro ifsf_fitloop,ispax,colarr,rowarr,cube,initdat,linelist,oned,onefit,quiet,$
             endelse
          endif else siglim_gas = 0b
          if tag_exist(initdat,'siginit_gas') then begin
-            size_siginit = size(initdat.siginit_gas[initdat.lines[0]])
+            size_siginit = size((initdat.siginit_gas)[initdat.lines[0]])
             if size_siginit[0] eq 1 then siginit_gas = initdat.siginit_gas $
             else begin
                siginit_gas = hash()
                if oned then $
                   foreach key,initdat.lines do $
-                     siginit_gas[key] = initdat.siginit_gas[key,i,*] $
+                     siginit_gas[key] = (initdat.siginit_gas)[key,i,*] $
                else $
                   foreach key,initdat.lines do $
-                     siginit_gas[key] = initdat.siginit_gas[key,i,j,*]
+                     siginit_gas[key] = (initdat.siginit_gas)[key,i,j,*]
             endelse
          endif else siginit_gas = 0b
 
@@ -265,7 +265,7 @@ pro ifsf_fitloop,ispax,colarr,rowarr,cube,initdat,linelist,oned,onefit,quiet,$
                else masksig_secondfit = masksig_secondfit_def
                maskwidths = hash(initdat.lines)
                foreach line,initdat.lines do $
-                  maskwidths[line] = masksig_secondfit*linepars.sigma_obs[line]
+                  maskwidths[line] = masksig_secondfit*(linepars.sigma_obs)[line]
                maskwidths_tmp = maskwidths
                peakinit_tmp = linepars.fluxpk_obs
                siginit_gas_tmp = linepars.sigma

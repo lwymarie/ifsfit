@@ -935,7 +935,7 @@ pro ifsf_makemaps,initproc
                       (map_y - qso_fitpar[5]+1)^2d)
       map_rnuckpc_ifs = map_rnuc * kpc_per_pix
       psf1d_x = dindgen(101)/100d*max(map_rnuckpc_ifs)
-      psf1d_y = alog10(moffat(psf1d_x,[qso_fitpar[1],0d,$
+      psf1d_y = alog10(drt_moffat(psf1d_x,[qso_fitpar[1],0d,$
                               qso_fitpar[2]*kpc_per_pix,$
                               qso_fitpar[7]]))
 
@@ -1674,7 +1674,7 @@ pro ifsf_makemaps,initproc
 ;         (map_y - empsf_fitpar[5]+1)^2d)
 ;      map_rempsfkpc_ifs = map_rempsf * kpc_per_pix
 ;      empsf1d_x = dindgen(101)/100d*max(map_rempsfkpc_ifs)
-;      empsf1d_y = alog10(moffat(empsf1d_x,[empsf_fitpar[1],0d,$
+;      empsf1d_y = alog10(drt_moffat(empsf1d_x,[empsf_fitpar[1],0d,$
 ;         empsf_fitpar[2]*kpc_per_pix,$
 ;         empsf_fitpar[7]]))
 ;
@@ -1801,7 +1801,8 @@ pro ifsf_makemaps,initproc
          if size_subim[1] lt resampthresh OR size_subim[2] lt resampthresh then $
             mapscl = rebin(mapscl,size_subim[1]*samplefac,size_subim[2]*samplefac,/sample)
       endelse
-      cgloadct,65,/reverse
+      cgloadct,39  ; MWL 2019-Jul-19: my color tables up to number 40 only
+;      cgloadct,65,/reverse
       cgimage,mapscl,/keep,pos=pos_hstbig,opos=truepos,$
               /noerase,missing_value=bad,missing_index=255,$
               missing_color='white'
@@ -1850,7 +1851,8 @@ pro ifsf_makemaps,initproc
             mapscl = rebin(mapscl,size_subim[1]*samplefac,size_subim[2]*samplefac,/sample)
       endelse
 
-      cgloadct,65,/reverse
+      cgloadct,39  ; MWL 2019-Jul-19: my color tables up to number 40 only
+;      cgloadct,65,/reverse
       cgimage,mapscl,/keep,pos=pos_ifsfov[*,0],opos=truepos,$
              /noerase,missing_value=bad,missing_index=255,$
              missing_color='white'
@@ -1951,7 +1953,8 @@ pro ifsf_makemaps,initproc
                            stretch=stretch,beta=beta)
          if size_subim[1] lt resampthresh OR size_subim[2] lt resampthresh then $
             mapscl = rebin(mapscl,dx*samplefac,dy*samplefac,/sample)
-         cgloadct,65,/reverse
+         cgloadct,39  ; MWL 2019-Jul-19: my color tables up to number 40 only
+;         cgloadct,65,/reverse
          cgimage,mapscl,/keep,pos=pos_ifsfov[*,1],opos=truepos,$
                  /noerase,missing_value=bad,missing_index=255,$
                  missing_color='white'
@@ -2017,7 +2020,8 @@ pro ifsf_makemaps,initproc
       mapscl = cgimgscl(rebin(ctmap,dx*samplefac,dy*samplefac,/sample),$
                         minval=zran[0],max=zran[1],$
                         stretch=initmaps.ct.stretch,beta=beta)                        
-      cgloadct,65,/reverse
+      cgloadct,39  ; MWL 2019-Jul-19: my color tables up to number 40 only
+;      cgloadct,65,/reverse
       cgimage,mapscl,/keep,pos=pos_ifsfov[*,fix(npanels_ifsfov) - 1],$
               opos=truepos,/noerase,missing_value=bad,missing_index=255,$
               missing_color='white'
@@ -2176,7 +2180,8 @@ pro ifsf_makemaps,initproc
       mapscl = chst_big
       if size_subim[1] lt resampthresh OR size_subim[2] lt resampthresh then $
          mapscl = rebin(mapscl,size_subim[1]*samplefac,size_subim[2]*samplefac,/sample)
-      cgloadct,65
+      cgloadct,39,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
+;      cgloadct,65,/reverse
       cgimage,mapscl,/keep,pos=pos_hstbig,opos=truepos,$
               /noerase,missing_value=bad,missing_index=255,$
               missing_color='white'
@@ -2205,7 +2210,8 @@ pro ifsf_makemaps,initproc
       mapscl = chst_fov
       if size_subim[1] lt resampthresh OR size_subim[2] lt resampthresh then $
          mapscl = rebin(mapscl,size_subim[1]*samplefac,size_subim[2]*samplefac,/sample)
-      cgloadct,65
+      cgloadct,39,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
+;      cgloadct,65
       cgimage,mapscl,/keep,pos=pos_ifsfov[*,0],opos=truepos,$
              /noerase,missing_value=bad,missing_index=255,$
              missing_color='white'
@@ -2232,7 +2238,8 @@ pro ifsf_makemaps,initproc
                            stretch=initmaps.ct.stretch)
          if size_subim[1] lt resampthresh OR size_subim[2] lt resampthresh then $
             mapscl = rebin(mapscl,size_subim[1]*samplefac,size_subim[2]*samplefac,/sample)
-         cgloadct,65
+      cgloadct,39,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
+;      cgloadct,65
          cgimage,mapscl,/keep,pos=pos_ifsfov[*,1],opos=truepos,$
                  /noerase,missing_value=bad,missing_index=255,$
                  missing_color='white'
@@ -2272,7 +2279,8 @@ pro ifsf_makemaps,initproc
       mapscl = cgimgscl(rebin(ctmap,dx*samplefac,dy*samplefac,/sample),$
                         minval=zran[0],max=zran[1],$
                         stretch=initmaps.ct.stretch,beta=beta)                        
-      cgloadct,65
+      cgloadct,39,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
+;      cgloadct,65
       cgimage,mapscl,/keep,pos=pos_ifsfov[*,fix(npanels_ifsfov) - 1],$
               opos=truepos,/noerase,missing_value=bad,missing_index=255,$
               missing_color='white'
@@ -2422,13 +2430,13 @@ pro ifsf_makemaps,initproc
          y = alog10(gaussian(x,[1d,0d,fwhm/2.35]))
          cgoplot,x,y,color='Black'
 ;        Moffat, index = 1.5
-         y = alog10(moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/1.5d)-1),1.5d]))
+         y = alog10(drt_moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/1.5d)-1),1.5d]))
          cgoplot,x,y,color='Red',/linesty
 ;        Moffat, index = 2.5
-         y = alog10(moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/2.5d)-1),2.5d]))
+         y = alog10(drt_moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/2.5d)-1),2.5d]))
          cgoplot,x,y,color='Red'
 ;        Moffat, index = 5
-         y = alog10(moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/5d)-1),5d]))
+         y = alog10(drt_moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/5d)-1),5d]))
          cgoplot,x,y,color='Blue'
       endif     
 
@@ -2436,7 +2444,8 @@ pro ifsf_makemaps,initproc
 ;                        minval=zran[0],max=zran[1],stretch=initmaps.ct.stretch)
       mapscl = cgimgscl(rebin(alog10(ctmap),dx*samplefac,dy*samplefac,/sample),$
                         minval=zran[0],max=zran[1],stretch=initmaps.ct.stretch)
-      cgloadct,65,/reverse
+      cgloadct,39  ; MWL 2019-Jul-19: my color tables up to number 40 only
+;      cgloadct,65,/reverse
       cgimage,mapscl,/keep,pos=pos_bot[*,0],opos=truepos,$
               /noerase,missing_value=bad,missing_index=255,$
               missing_color='white'
@@ -2477,13 +2486,13 @@ pro ifsf_makemaps,initproc
 ;            y = alog10(gaussian(x,[1d,0d,fwhm/2.35]))
 ;            cgoplot,x,y,color='Black'
 ;;           Moffat, index = 1.5
-;            y = alog10(moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/1.5d)-1),1.5d]))
+;            y = alog10(drt_moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/1.5d)-1),1.5d]))
 ;            cgoplot,x,y,color='Red',/linesty
 ;;           Moffat, index = 2.5
-;            y = alog10(moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/2.5d)-1),2.5d]))
+;            y = alog10(drt_moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/2.5d)-1),2.5d]))
 ;            cgoplot,x,y,color='Red'
 ;;           Moffat, index = 5
-;            y = alog10(moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/5d)-1),5d]))
+;            y = alog10(drt_moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/5d)-1),5d]))
 ;            cgoplot,x,y,color='Blue'
 ;         endif
 
@@ -2491,7 +2500,8 @@ pro ifsf_makemaps,initproc
 ;                           minval=zran[0],max=zran[1],stretch=initmaps.ct.stretch)
          mapscl = cgimgscl(rebin(alog10(qso_map),dx*samplefac,dy*samplefac,/sample),$
                         minval=zran[0],max=zran[1],stretch=initmaps.ct.stretch)
-         cgloadct,65,/reverse
+         cgloadct,39  ; MWL 2019-Jul-19: my color tables up to number 40 only
+;         cgloadct,65,/reverse
          cgimage,mapscl,/keep,pos=pos_bot[*,1],opos=truepos,$
                  /noerase,missing_value=bad,missing_index=255,$
                  missing_color='white'
@@ -2529,13 +2539,13 @@ pro ifsf_makemaps,initproc
 ;            y = alog10(gaussian(x,[1d,0d,fwhm/2.35]))
 ;            cgoplot,x,y,color='Black'
 ;;           Moffat, index = 1.5
-;            y = alog10(moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/1.5d)-1),1.5d]))
+;            y = alog10(drt_moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/1.5d)-1),1.5d]))
 ;            cgoplot,x,y,color='Red',/linesty
 ;;           Moffat, index = 2.5
-;            y = alog10(moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/2.5d)-1),2.5d]))
+;            y = alog10(drt_moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/2.5d)-1),2.5d]))
 ;            cgoplot,x,y,color='Red'
 ;;           Moffat, index = 5
-;            y = alog10(moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/5d)-1),5d]))
+;            y = alog10(drt_moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/5d)-1),5d]))
 ;            cgoplot,x,y,color='Blue'
 ;         endif
          
@@ -2543,7 +2553,8 @@ pro ifsf_makemaps,initproc
 ;                           minval=zran[0]),max=zran[1],stretch=initmaps.ct.stretch)
          mapscl = cgimgscl(rebin(alog10(host_map),dx*samplefac,dy*samplefac,/sample),$
                         minval=zran[0],max=zran[1],stretch=initmaps.ct.stretch)
-         cgloadct,65,/reverse
+         cgloadct,39  ; MWL 2019-Jul-19: my color tables up to number 40 only
+;         cgloadct,65,/reverse
          cgimage,mapscl,/keep,pos=pos_bot[*,2],opos=truepos,$
                  /noerase,missing_value=bad,missing_index=255,$
                  missing_color='white'
@@ -2575,7 +2586,8 @@ pro ifsf_makemaps,initproc
 ;                              stretch=initmaps.ct.stretch)
             mapscl = cgimgscl(rebin(alog10(scatt_map),dx*samplefac,dy*samplefac,/sample),$
                         minval=zran[0],max=zran[1],stretch=initmaps.ct.stretch)
-            cgloadct,65,/reverse
+            cgloadct,39  ; MWL 2019-Jul-19: my color tables up to number 40 only
+;            cgloadct,65,/reverse
             cgimage,mapscl,/keep,pos=pos_bot[*,3],opos=truepos,$
                     /noerase,missing_value=bad,missing_index=255,$
                     missing_color='white'
@@ -2690,7 +2702,8 @@ pro ifsf_makemaps,initproc
 
       mapscl = bytscl(rebin(map,dx*samplefac,dy*samplefac,/sample),$
                       min=plotdat[0],max=plotdat[1])
-      cgloadct,74,/reverse
+      cgloadct,39  ; MWL 2019-Jul-19: my color tables up to number 40 only
+;      cgloadct,74,/reverse
       cgimage,mapscl,/keep,pos=pos_top[*,0],opos=truepos,$
               missing_value=bad,missing_index=255,$
               missing_color='white'
@@ -2743,7 +2756,8 @@ pro ifsf_makemaps,initproc
                                   rlo=rangelo,rhi=rangehi)
          mapscl = bytscl(rebin(maperr,dx*samplefac,dy*samplefac,/sample),$
                                min=plotdat[0],max=plotdat[1])
-         cgloadct,74,/reverse
+         cgloadct,39  ; MWL 2019-Jul-19: my color tables up to number 40 only
+;         cgloadct,74,/reverse
          cgimage,mapscl,/keep,pos=pos_bot[*,0],opos=truepos,$
                  missing_value=bad,missing_index=255,$
                  missing_color='white',/noerase
@@ -2799,7 +2813,8 @@ pro ifsf_makemaps,initproc
 
          mapscl = bytscl(rebin(map,dx*samplefac,dy*samplefac,/sample),$
                          min=plotdat[0],max=plotdat[1])
-         cgloadct,65,/reverse
+         cgloadct,39  ; MWL 2019-Jul-19: my color tables up to number 40 only
+;         cgloadct,65,/reverse
          cgimage,mapscl,/keep,pos=pos_top[*,1],opos=truepos,$
                  /noerase,missing_value=bad,missing_index=255,$
                  missing_color='white'
@@ -2841,7 +2856,8 @@ pro ifsf_makemaps,initproc
                                      rlo=rangelo,rhi=rangehi)
             mapscl = bytscl(rebin(maperr,dx*samplefac,dy*samplefac,/sample),$
                                   min=plotdat[0],max=plotdat[1])
-            cgloadct,74,/reverse
+            cgloadct,39  ; MWL 2019-Jul-19: my color tables up to number 40 only
+;            cgloadct,74,/reverse
             cgimage,mapscl,/keep,pos=pos_bot[*,1],opos=truepos,$
                     missing_value=bad,missing_index=255,$
                     missing_color='white',/noerase
@@ -2900,7 +2916,8 @@ pro ifsf_makemaps,initproc
 
          mapscl = bytscl(rebin(map,dx*samplefac,dy*samplefac,/sample),$
                          min=plotdat[0],max=plotdat[1])
-         cgloadct,65,/reverse
+         cgloadct,39  ; MWL 2019-Jul-19: my color tables up to number 40 only
+;         cgloadct,65,/reverse
          cgimage,mapscl,/keep,pos=pos_top[*,npx-1],opos=truepos,$
                  /noerase,missing_value=bad,missing_index=255,$
                  missing_color='white'
@@ -2942,7 +2959,8 @@ pro ifsf_makemaps,initproc
                                      rlo=rangelo,rhi=rangehi)
             mapscl = bytscl(rebin(maperr,dx*samplefac,dy*samplefac,/sample),$
                                   min=plotdat[0],max=plotdat[1])
-            cgloadct,74,/reverse
+            cgloadct,39  ; MWL 2019-Jul-19: my color tables up to number 40 only
+;            cgloadct,74,/reverse
             cgimage,mapscl,/keep,pos=pos_bot[*,npx-1],opos=truepos,$
                     missing_value=bad,missing_index=255,$
                     missing_color='white',/noerase
@@ -3100,7 +3118,8 @@ pro ifsf_makemaps,initproc
                                   min=zran[0],max=zran[1])
    
 ;                 Plot image
-                  cgloadct,65,/reverse
+                  cgloadct,39  ; MWL 2019-Jul-19: my color tables up to number 40 only
+;                  cgloadct,65,/reverse
                   cgimage,mapscl,/keep,pos=pos_top[*,j],opos=truepos,$
                           noerase=iplot ne 0,missing_value=bad,missing_index=255,$
                           missing_color='white'
@@ -3181,8 +3200,9 @@ pro ifsf_makemaps,initproc
                                   min=zran[0],max=zran[1])
    
 ;                 Plot image
-                  if stregex(vtags[j],'sig',/bool) then cgloadct,65,/reverse $
-                  else cgloadct,74,/reverse
+                  cgloadct,39  ; MWL 2019-Jul-19: my color tables up to number 40 only
+;                  if stregex(vtags[j],'sig',/bool) then cgloadct,65,/reverse $
+;                  else cgloadct,74,/reverse
                   cgimage,mapscl,/keep,pos=pos_bot[*,j],opos=truepos,$
                           noerase=iplot ne 0,missing_value=bad,missing_index=255,$
                           missing_color='white'
@@ -3772,13 +3792,13 @@ pro ifsf_makemaps,initproc
 ; Moffat index values chosen to match turbulence theory (5), IRAF default (2.5),
 ; and wingy profile (1.5). These are the same chosen by Trujillo et al. 2001.
 ;                    Moffat, index = 1.5
-                     y = alog10(moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/1.5d)-1),1.5d]))
+                     y = alog10(drt_moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/1.5d)-1),1.5d]))
                      cgoplot,x,y,color='Red',/linesty
 ;                    Moffat, index = 2.5
-                     y = alog10(moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/2.5d)-1),2.5d]))
+                     y = alog10(drt_moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/2.5d)-1),2.5d]))
                      cgoplot,x,y,color='Red'
 ;                    Moffat, index = 5
-                     y = alog10(moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/5d)-1),5d]))
+                     y = alog10(drt_moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/5d)-1),5d]))
                      cgoplot,x,y,color='Blue'
                   endif
 
