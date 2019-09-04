@@ -64,14 +64,14 @@ pro ifsf_printfitpar,lun,col,row,struct,outfile=outfile
    if keyword_set(outfile) then begin
 
       openw,lun,outfile,/get_lun
-      printf,lun,'#Col','Row','Cmp','Rchi2','Niter',$
+      printf,lun,'#Col','Row','Rchi2','Niter',$
              format='(A-4,2A4,2A6)'
 
 ;  Print data
    endif else begin
     
      printf,lun,col,row,struct.redchisq,struct.niter,$
-            format='(I4,I4,I4,D6.2,I6)'
+            format='(I4,I4,D6.2,I6)'
 
 
    endelse
