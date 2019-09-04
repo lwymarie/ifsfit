@@ -3250,7 +3250,7 @@ pro ifsf_makemaps,initproc
                   ticknames[0]=' '
                   ticknames[ncbdiv]=' '
                   cgcolorbar,position=cbpos,divisions=ncbdiv,$
-                             ticknames=ticknames,charsize=0.6
+                             ticknames=ticknames,charsize=0.6*charscale
 ;                 Title
                   title=vtitles[j]
                   yoffset = mar_yfrac*0.85
