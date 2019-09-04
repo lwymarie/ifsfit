@@ -432,14 +432,14 @@ pro ifsfa,initproc,cols=cols,rows=rows,noplots=noplots,oned=oned,$
 ;             Sort components
               igd = dindgen(thisncomp)
               indices = lindgen(initdat.maxncomp)
-              sigtmp = linepars.sigma[thisncompline,*]
-              fluxtmp = linepars.flux[thisncompline,*]
-              if not tag_exist(initdat,'sorttype') then $
+              sigtmp = (linepars.sigma)[thisncompline,*]
+              fluxtmp = (linepars.flux)[thisncompline,*]
+              if ~ tag_exist(initdat,'sorttype') then $
                  isort = sort(sigtmp[igd]) $
               else if initdat.sorttype eq 'wave' then $
-                 isort = sort(linepars.wave[line,igd]) $
+                 isort = sort((linepars.wave)[line,igd]) $
               else if initdat.sorttype eq 'reversewave' then $
-                 isort = reverse(sort(linepars.wave[line,igd]))
+                 isort = reverse(sort((linepars.wave)[line,igd]))
               if tag_exist(initdat,'flipsort') then $
                  if flipsort[i,j] then isort = reverse(isort)
            endif
