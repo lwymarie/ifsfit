@@ -137,12 +137,10 @@ pro ifsf,initproc,cols=cols,rows=rows,oned=oned,onefit=onefit,ncores=ncores,$
   if tag_exist(initdat,'argsreadcube') then $
      cube = ifsf_readcube(initdat.infile,quiet=quiet,oned=oned,$
                           datext=datext,varext=varext,dqext=dqext,$
-                          /airtovac,/helio,$
                           vormap=vormap,_extra=initdat.argsreadcube) $
   else $
      cube = ifsf_readcube(initdat.infile,quiet=quiet,oned=oned,$
                           datext=datext,varext=varext,dqext=dqext,$
-                          /airtovac,/helio,$
                           vormap=vormap)
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
