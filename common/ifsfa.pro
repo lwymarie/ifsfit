@@ -199,7 +199,7 @@ pro ifsfa,initproc,cols=cols,rows=rows,noplots=noplots,oned=oned,$
 
   if tag_exist(initdat,'vormap') then begin
      vormap=initdat.vormap
-     nvorcols = max(vormap)
+     nvorcols = max(vormap,/nan)
      vorcoords = intarr(nvorcols,2)
      for i=1,nvorcols do begin
         ivor = where(vormap eq i,ctivor)

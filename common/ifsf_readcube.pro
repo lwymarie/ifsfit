@@ -195,7 +195,7 @@ function ifsf_readcube,infile,header=header,quiet=quiet,oned=oned,$
 
   if keyword_set(vormap) then begin
 
-    ncols = max(vormap)
+    ncols = max(vormap,/nan)
     nrows = 1
     vordat = dblarr(ncols,nrows,nz)
     vorvar = dblarr(ncols,nrows,nz)
