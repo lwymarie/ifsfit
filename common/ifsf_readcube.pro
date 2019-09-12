@@ -88,7 +88,7 @@ function ifsf_readcube,infile,header=header,quiet=quiet,oned=oned,$
                        datext=datext,varext=varext,dqext=dqext,$
                        vormap=vormap,error=error,waveext=waveext,$
                        invvar=invvar,zerodq=zerodq,linearize=linearize,$
-                       gooddq=gooddq,airtovac=airtovac,helio=helio
+                       gooddq=gooddq,airtovac=airtovac,helio=helio,tosb=tosb
 
   if ~ keyword_set(quiet) then print,'IFSF_READCUBE: Loading data.'
 
@@ -143,6 +143,14 @@ function ifsf_readcube,infile,header=header,quiet=quiet,oned=oned,$
   endif else begin
      header_wave = ''
   endelse
+
+  if keyword_set(tosb) then begin
+     voxel_size = abs((sxpar(header_dat,'CD1_1')*3600d*sxpar(header_dat,'CD2_2')*3600d))
+     dat /= voxel_size
+     var /= voxel_size^2d
+     print,'IFSF_READCUBE: voxel size in squared arcsecs is',voxel_size
+     print,'IFSF_READCUBE: Converted flux density from per voxel to per arcsec^2.'
+  endif
 
 ; Get #s of rows, columns, and wavelength pixels. Logic for 2-d case assumes 
 ; that # wavelength pts > # cols.
