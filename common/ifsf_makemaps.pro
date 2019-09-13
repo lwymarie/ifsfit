@@ -102,7 +102,7 @@ pro ifsf_plotaxesnuc,xran_kpc,yran_kpc,xnuc,ynuc,nolab=nolab,toplab=toplab,$
                      nonuc=nonuc,colornuc=colornuc,noylab=noylab,$
                      colorax=colorax
    COMPILE_OPT IDL2, HIDDEN
-   if not keyword_set(colorax) then colornuc = !P.color
+;   if not keyword_set(colorax) then colornuc = !P.color
    if not keyword_set(charsize) then charsize=!P.charsize
    if not keyword_set(nolab) then begin
       if keyword_set(toplab) OR keyword_set(noxlab) then $
@@ -137,7 +137,7 @@ pro ifsf_plotaxesnuc,xran_kpc,yran_kpc,xnuc,ynuc,nolab=nolab,toplab=toplab,$
    else $
       cgaxis,yaxis=0,yran=yran_kpc,ytickn=replicate(' ',60),/ysty,$
              color=colorax
-   if not keyword_set(colornuc) then colornuc = !P.color
+;   if not keyword_set(colornuc) then colornuc = !P.color
    if not keyword_set(nonuc) then cgoplot,xnuc,ynuc,psym=1,color=colornuc
 end
 ;
