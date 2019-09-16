@@ -436,6 +436,8 @@ pro ifsfa,initproc,cols=cols,rows=rows,noplots=noplots,oned=oned,$
               fluxtmp = (linepars.flux)[thisncompline,*]
               if ~ tag_exist(initdat,'sorttype') then $
                  isort = sort(sigtmp[igd]) $
+              else if initdat.sorttype eq 'reverseflux' then $
+                 isort = reverse(sort(fluxtmp[igd])) $
               else if initdat.sorttype eq 'wave' then $
                  isort = sort((linepars.wave)[line,igd]) $
               else if initdat.sorttype eq 'reversewave' then $
