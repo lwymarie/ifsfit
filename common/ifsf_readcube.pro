@@ -41,6 +41,13 @@
 ;      The extention number of a wavelength array.
 ;    zerodq: in, optional, type=byte
 ;      Zero out the DQ array.
+;    tovac: in, optional, type=byte
+;      Convert the read-in air wavelengths to vacuum wavelengths.
+;    helio: in, optional, type=byte
+;      Apply heliocentric corrections.
+;    mskOI: in, optional, type=byte
+;      Set the pixels of wavelengths covering the [OI] glow to carry high variance
+;      values so that their weights for fitting are low.
 ;
 ; :Author:
 ;    David S. N. Rupke::
@@ -88,7 +95,8 @@ function ifsf_readcube,infile,header=header,quiet=quiet,oned=oned,$
                        datext=datext,varext=varext,dqext=dqext,$
                        vormap=vormap,error=error,waveext=waveext,$
                        invvar=invvar,zerodq=zerodq,linearize=linearize,$
-                       gooddq=gooddq,airtovac=airtovac,helio=helio,tosb=tosb
+                       gooddq=gooddq,$
+                       tovac=tovac,helio=helio,mskOI=mskOI
 
   if ~ keyword_set(quiet) then print,'IFSF_READCUBE: Loading data.'
 
@@ -144,14 +152,6 @@ function ifsf_readcube,infile,header=header,quiet=quiet,oned=oned,$
      header_wave = ''
   endelse
 
-  if keyword_set(tosb) then begin
-     voxel_size = abs((sxpar(header_dat,'CD1_1')*3600d*sxpar(header_dat,'CD2_2')*3600d))
-     dat /= voxel_size
-     var /= voxel_size^2d
-     print,'IFSF_READCUBE: voxel size in squared arcsecs is',voxel_size
-     print,'IFSF_READCUBE: Converted flux density from per voxel to per arcsec^2.'
-  endif
-
 ; Get #s of rows, columns, and wavelength pixels. Logic for 2-d case assumes 
 ; that # wavelength pts > # cols.
   datasize = size(dat)
@@ -199,6 +199,20 @@ function ifsf_readcube,infile,header=header,quiet=quiet,oned=oned,$
         print,'               solution will be incorrect.'
      endif
      wave = crval + cdelt*(pix-crpix)
+  endif
+
+  ; MWL 2019-11-08: added mskOI keyword
+  if keyword_set(mskOI) then begin
+     OI5577 = ifsf_linelist('[OI]5577')
+     OIwave = OI5577['[OI]5577']
+     tmp = min(abs(wave-OIwave-3)),ilo)
+     tmp = min(abs(wave-OIwave+3)),ihi)
+     for i=1,ncols do begin
+        for j=1,nrows do begin
+            var[i-1,j-1,ilo:ihi] = 10d*max(var[i-1,j-1,ilo:ihi])
+        endfor
+     endfor
+     print,'IFSF_READCUBE: Pixels covering [OI] glow set to have high variance.'
   endif
 
   if keyword_set(vormap) then begin
@@ -262,7 +276,7 @@ function ifsf_readcube,infile,header=header,quiet=quiet,oned=oned,$
      if ctbd gt 0 then dq[ibd] = 1
   endif
 
-  if keyword_set(airtovac) then begin
+  if keyword_set(tovac) then begin
      airtovac,wave
      print,'IFSF_READCUBE: Converted air wavelengths to vacuum wavelengths.'
   endif

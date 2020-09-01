@@ -6838,6 +6838,8 @@ pro ifsf_makemaps,initproc
     
       if linelist.haskey('Halpha') then ofcompline = 'Halpha' $
       else if linelist.haskey('Hbeta') then ofcompline = 'Hbeta' $
+      ; MWL 2019-12-27: Choose Lya over other ions
+      else if linelist.haskey('Lyalpha') then ofcompline = 'Lyalpha' $
       else begin
          linelistkeys = linelist.keys()
          ofcompline = linelistkeys[0]

@@ -586,6 +586,53 @@ function ifsf_kcwi,linelist,linelistz,linetie,$
        ;      Make sure initial value is correct
        parinfo[foff+linea*3].value = parinfo[foff+lineb*3].value/2.8d
     endif
+
+    ; MWL 2020-05-02: fix OVI, NV, SiIV, CIV doublet ratios to 1:1,
+    ; suitable for optically thick gas in quasar circumgalactic medium
+
+    linea = where(lines_arr eq 'OVI1031',cta)
+    lineb = where(lines_arr eq 'OVI1037',ctb)
+    if cta gt 0 and ctb gt 0 then begin
+       parinfo[foff+lineb*3].tied = 'P['+ $
+          string(foff+linea*3,$
+          format='(I0)')+']/1.0d'
+       parinfo[foff+lineb*3].flux_tie = 'OVI1031'
+       ;      Make sure initial value is correct
+       parinfo[foff+lineb*3].value = parinfo[foff+linea*3].value/1.0d
+    endif
+
+    linea = where(lines_arr eq 'NV1238',cta)
+    lineb = where(lines_arr eq 'NV1242',ctb)
+    if cta gt 0 AND ctb gt 0 then begin
+       parinfo[foff+linea*3].tied = 'P['+ $
+          string(foff+lineb*3,$
+          format='(I0)')+']/1.0d'
+       parinfo[foff+linea*3].flux_tie = 'NV1238'
+       ;      Make sure initial value is correct
+       parinfo[foff+linea*3].value = parinfo[foff+lineb*3].value/1.0d
+    endif
+
+    linea = where(lines_arr eq 'SiIV1393',cta)
+    lineb = where(lines_arr eq 'SiIV1402',ctb)
+    if cta gt 0 and ctb gt 0 then begin
+       parinfo[foff+lineb*3].tied = 'P['+ $
+          string(foff+linea*3,$
+          format='(I0)')+']/1.0d'
+       parinfo[foff+lineb*3].flux_tie = 'SiIV1393'
+       ;      Make sure initial value is correct
+       parinfo[foff+lineb*3].value = parinfo[foff+linea*3].value/1.0d
+    endif
+
+    linea = where(lines_arr eq 'CIV1548',cta)
+    lineb = where(lines_arr eq 'CIV1550',ctb)
+    if cta gt 0 and ctb gt 0 then begin
+       parinfo[foff+lineb*3].tied = 'P['+ $
+          string(foff+linea*3,$
+          format='(I0)')+']/1.0d'
+       parinfo[foff+lineb*3].flux_tie = 'CIV1548'
+       ;      Make sure initial value is correct
+       parinfo[foff+lineb*3].value = parinfo[foff+linea*3].value/1.0d
+    endif
   endfor
 
 ; Check parinit initial values vs. limits
