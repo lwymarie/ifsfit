@@ -148,12 +148,25 @@ pro ifsf_pltcont,instr,outfile,compspec=compspec,comptitles=comptitles,$
   if ct1 gt 0 then begin
      ydat = specstars
      ymod = modstars
+;     if keyword_set(yranminmax) then $
+;        yran = [min([ydat[i1],ymod[i1]]),max([ydat[i1],ymod[i1]])] $
+;     else $
+;        yran = [0,max([ydat[i1],ymod[i1]])]
+;    Exclude [OI] air glow in determining plot range, MWL 2019-Nov-28
+     OI5577 = ifsf_linelist('[OI]5577')
+     OIwave = OI5577['[OI]5577']
+     OIlo = min(abs(wave[i1]-(OIwave-3)),iOIlo)
+     OIhi = min(abs(wave[i1]-(OIwave+4.6)),iOIhi)  ; to cover vacuum wavelengths
+     iclean = i1
+     remove,findgen(iOIhi-iOIlo+1)+iOIlo,iclean
      if keyword_set(yranminmax) then $
-        yran = [min([ydat[i1],ymod[i1]]),max([ydat[i1],ymod[i1]])] $
+        yran = [min([ydat[iclean],ymod[iclean]]),max([ydat[iclean],ymod[iclean]])] $
      else $
-        yran = [0,max([ydat[i1],ymod[i1]])]
-     ydi = ydat[i1]
-     ymodi = ymod[i1]
+        yran = [0,max([ydat[iclean],ymod[iclean]])]
+;     ydi = ydat[i1]
+;     ymodi = ymod[i1]
+     ydi = ydat[iclean]
+     ymodi = ymod[iclean]
      y = [ydi-ymodi]
      ny = n_elements(y)
      iysort = sort(y)
@@ -179,12 +192,24 @@ pro ifsf_pltcont,instr,outfile,compspec=compspec,comptitles=comptitles,$
   if ct2 gt 0 then begin
      ydat = specstars
      ymod = modstars
+;     if keyword_set(yranminmax) then $
+;        yran = [min([ydat[i2],ymod[i2]]),max([ydat[i2],ymod[i2]])] $
+;     else $
+;        yran = [0,max([ydat[i2],ymod[i2]])]
+     OI5577 = ifsf_linelist('[OI]5577')
+     OIwave = OI5577['[OI]5577']
+     OIlo = min(abs(wave[i2]-(OIwave-3)),iOIlo)
+     OIhi = min(abs(wave[i2]-(OIwave+4.6)),iOIhi)
+     iclean = i2
+     remove,findgen(iOIhi-iOIlo+1)+iOIlo,iclean
      if keyword_set(yranminmax) then $
-        yran = [min([ydat[i2],ymod[i2]]),max([ydat[i2],ymod[i2]])] $
+        yran = [min([ydat[iclean],ymod[iclean]]),max([ydat[iclean],ymod[iclean]])] $
      else $
-        yran = [0,max([ydat[i2],ymod[i2]])]
-     ydi = ydat[i2]
-     ymodi = ymod[i2]
+        yran = [0,max([ydat[iclean],ymod[iclean]])]
+;     ydi = ydat[i2]
+;     ymodi = ymod[i2]
+     ydi = ydat[iclean]
+     ymodi = ymod[iclean]
      y = [ydi-ymodi]
      ny = n_elements(y)
      iysort = sort(y)
@@ -210,12 +235,24 @@ pro ifsf_pltcont,instr,outfile,compspec=compspec,comptitles=comptitles,$
   if ct3 gt 0 then begin
      ydat = specstars
      ymod = modstars
+;     if keyword_set(yranminmax) then $
+;        yran = [min([ydat[i3],ymod[i3]]),max([ydat[i3],ymod[i3]])] $
+;     else $
+;        yran = [0,max([ydat[i3],ymod[i3]])]
+     OI5577 = ifsf_linelist('[OI]5577')
+     OIwave = OI5577['[OI]5577']
+     OIlo = min(abs(wave[i3]-(OIwave-3)),iOIlo)
+     OIhi = min(abs(wave[i3]-(OIwave+4.6)),iOIhi)  ; to cover vacuum wavelengths
+     iclean = i3
+     remove,findgen(iOIhi-iOIlo+1)+iOIlo,iclean
      if keyword_set(yranminmax) then $
-        yran = [min([ydat[i3],ymod[i3]]),max([ydat[i3],ymod[i3]])] $
+        yran = [min([ydat[iclean],ymod[iclean]]),max([ydat[iclean],ymod[iclean]])] $
      else $
-        yran = [0,max([ydat[i3],ymod[i3]])]
-     ydi = ydat[i3]
-     ymodi = ymod[i3]
+        yran = [0,max([ydat[iclean],ymod[iclean]])]
+;     ydi = ydat[i3]
+;     ymodi = ymod[i3]
+     ydi = ydat[iclean]
+     ymodi = ymod[iclean]
      y = [ydi-ymodi]
      ny = n_elements(y)
      iysort = sort(y)

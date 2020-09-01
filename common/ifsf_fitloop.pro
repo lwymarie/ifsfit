@@ -50,6 +50,7 @@
 ;      2016oct20, DSNR, fixed treatment of SIGINIT_GAS
 ;      2016nov17, DSNR, added flux calibration
 ;      2018jun25, DSNR, added MC error calculation on stellar parameters
+;      2019nov08, MWL,
 ;
 ; :Copyright:
 ;    Copyright (C) 2016--2018 David S. N. Rupke
@@ -235,7 +236,7 @@ pro ifsf_fitloop,ispax,colarr,rowarr,cube,initdat,linelist,oned,onefit,quiet,$
                                    siglim_gas=siglim_gas,$
                                    siginit_gas=siginit_gas,$
                                    tweakcntfit=tweakcntfit,col=i+1,$
-                                   row=j+1)
+                                   row=j+1,goodcomp=goodcomp)  ; MWL 2019-10-18
 
          testsize = size(structinit)
          if testsize[0] eq 0 then begin
@@ -284,7 +285,7 @@ pro ifsf_fitloop,ispax,colarr,rowarr,cube,initdat,linelist,oned,onefit,quiet,$
                                   siginit_gas=siginit_gas_tmp,$
                                   siglim_gas=siglim_gas,$
                                   tweakcntfit=tweakcntfit,col=i+1,$
-                                  row=j+1)
+                                  row=j+1,goodcomp=goodcomp)  ; MWL 2019-10-18
             testsize = size(struct)
             if testsize[0] eq 0 then begin
                printf,loglun,'IFSF: Aborting.'
@@ -312,15 +313,17 @@ pro ifsf_fitloop,ispax,colarr,rowarr,cube,initdat,linelist,oned,onefit,quiet,$
 
             linepars = ifsf_sepfitpars(linelist,struct.param,$
                                        struct.perror,struct.parinfo)
+            oldgoodcomp = goodcomp
             if tag_exist(initdat,'argscheckcomp') then goodcomp = $
                call_function(initdat.fcncheckcomp,linepars,initdat.linetie,$
                              ncomp,newncomp,siglim_gas,$
-                             _extra=initdat.argscheckcomp) $
+                             _extra=initdat.argscheckcomp,maxncomp=initdat.maxncomp) $  ; MWL 2019-10-18
             else goodcomp = $
                call_function(initdat.fcncheckcomp,linepars,initdat.linetie,$
-                             ncomp,newncomp,siglim_gas)
+                             ncomp,newncomp,siglim_gas,maxncomp=initdat.maxncomp)  ; MWL 2019-10-18
 
-            if newncomp.count() gt 0 then begin
+;            if newncomp.count() gt 0 then begin
+             if (newncomp.count() gt 0) or ((goodcomp ne oldgoodcomp).toarray() ne !NULL) then begin
                foreach nc,newncomp,line do $
                   printf,loglun,'IFSF: Repeating the fit of ',line,$
                          ' with ',string(nc,format='(I0)'),' components.',$
@@ -437,7 +440,7 @@ pro ifsf_fitloop,ispax,colarr,rowarr,cube,initdat,linelist,oned,onefit,quiet,$
                                           peakinit=peakinit_tmp,$
                                           siginit_gas=siginit_gas_tmp,$
                                           tweakcntfit=tweakcntfit,col=i+1,$
-                                          row=j+1)
+                                          row=j+1,goodcomp=goodcomp)  ; MWL 2019-10-18
 
 
 

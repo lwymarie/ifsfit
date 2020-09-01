@@ -354,7 +354,9 @@ pro ifsf_makemaps,initproc
       asdist = initdat.distance
    endif else begin
 ; Planck 2018 parameters: https://ui.adsabs.harvard.edu/#abs/arXiv:1807.06209
-      ldist = lumdist(initdat.zsys_gas,H0=67.4d,Omega_m=0.315d,Lambda0=0.685d,/silent)
+;      ldist = lumdist(initdat.zsys_gas,H0=67.4d,Omega_m=0.315d,Lambda0=0.685d,/silent)
+; Adopt current Wright's comological calculator's cosmology
+      ldist = lumdist(initdat.zsys_gas,H0=69.6d,Omega_m=0.286d,Lambda0=0.714d,/silent)
       asdist = ldist/(1d + initdat.zsys_gas)^2d
    endelse
    kpc_per_as = asdist*1000d/206265d
@@ -369,8 +371,13 @@ pro ifsf_makemaps,initproc
    if not tag_exist(initdat,'datext') then datext=1 else datext=initdat.datext
    if not tag_exist(initdat,'varext') then varext=2 else varext=initdat.varext
    if not tag_exist(initdat,'dqext') then dqext=3 else dqext=initdat.dqext
-   datacube = ifsf_readcube(initdat.infile,/quiet,oned=oned,$
-                            datext=datext,varext=varext,dqext=dqext)
+   if tag_exist(initdat,'argsreadcube') then $
+      datacube = ifsf_readcube(initdat.infile,/quiet,oned=oned,$
+                               datext=datext,varext=varext,dqext=dqext,$
+                               _extra=initdat.argsreadcube) $
+   else $
+      datacube = ifsf_readcube(initdat.infile,quiet=quiet,oned=oned,$
+                               datext=datext,varext=varext,dqext=dqext)
    if tag_exist(initmaps,'fluxfactor') then begin
       datacube.dat *= initmaps.fluxfactor
       datacube.var *= (initmaps.fluxfactor)^2d
@@ -1801,8 +1808,7 @@ pro ifsf_makemaps,initproc
          if size_subim[1] lt resampthresh OR size_subim[2] lt resampthresh then $
             mapscl = rebin(mapscl,size_subim[1]*samplefac,size_subim[2]*samplefac,/sample)
       endelse
-      cgloadct,10,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-      stretch,0,255,0.7
+      cgloadct,10,/brewer,/reverse,clip=[20,225]  ; MWL 2019-Jul-19: my color tables up to number 40 only
 ;      cgloadct,65,/reverse
       cgimage,mapscl,/keep,pos=pos_hstbig,opos=truepos,$
               /noerase,missing_value=bad,missing_index=255,$
@@ -1852,8 +1858,7 @@ pro ifsf_makemaps,initproc
             mapscl = rebin(mapscl,size_subim[1]*samplefac,size_subim[2]*samplefac,/sample)
       endelse
 
-      cgloadct,10,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-      stretch,0,255,0.7
+      cgloadct,10,/brewer,/reverse,clip=[20,225]  ; MWL 2019-Jul-19: my color tables up to number 40 only
 ;      cgloadct,65,/reverse
       cgimage,mapscl,/keep,pos=pos_ifsfov[*,0],opos=truepos,$
              /noerase,missing_value=bad,missing_index=255,$
@@ -1955,8 +1960,7 @@ pro ifsf_makemaps,initproc
                            stretch=stretch,beta=beta)
          if size_subim[1] lt resampthresh OR size_subim[2] lt resampthresh then $
             mapscl = rebin(mapscl,dx*samplefac,dy*samplefac,/sample)
-         cgloadct,10,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-         stretch,0,255,0.7
+         cgloadct,10,/brewer,/reverse,clip=[20,225]  ; MWL 2019-Jul-19: my color tables up to number 40 only
 ;         cgloadct,65,/reverse
          cgimage,mapscl,/keep,pos=pos_ifsfov[*,1],opos=truepos,$
                  /noerase,missing_value=bad,missing_index=255,$
@@ -2023,8 +2027,7 @@ pro ifsf_makemaps,initproc
       mapscl = cgimgscl(rebin(ctmap,dx*samplefac,dy*samplefac,/sample),$
                         minval=zran[0],max=zran[1],$
                         stretch=initmaps.ct.stretch,beta=beta)                        
-      cgloadct,10,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-      stretch,0,255,0.7
+      cgloadct,10,/brewer,/reverse,clip=[20,225]  ; MWL 2019-Jul-19: my color tables up to number 40 only
 ;      cgloadct,65,/reverse
       cgimage,mapscl,/keep,pos=pos_ifsfov[*,fix(npanels_ifsfov) - 1],$
               opos=truepos,/noerase,missing_value=bad,missing_index=255,$
@@ -2184,8 +2187,7 @@ pro ifsf_makemaps,initproc
       mapscl = chst_big
       if size_subim[1] lt resampthresh OR size_subim[2] lt resampthresh then $
          mapscl = rebin(mapscl,size_subim[1]*samplefac,size_subim[2]*samplefac,/sample)
-      cgloadct,10,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-      stretch,0,255,0.7
+      cgloadct,10,/brewer,/reverse,clip=[20,225]  ; MWL 2019-Jul-19: my color tables up to number 40 only
 ;      cgloadct,65,/reverse
       cgimage,mapscl,/keep,pos=pos_hstbig,opos=truepos,$
               /noerase,missing_value=bad,missing_index=255,$
@@ -2215,7 +2217,7 @@ pro ifsf_makemaps,initproc
       mapscl = chst_fov
       if size_subim[1] lt resampthresh OR size_subim[2] lt resampthresh then $
          mapscl = rebin(mapscl,size_subim[1]*samplefac,size_subim[2]*samplefac,/sample)
-      cgloadct,10,/brewer  ; MWL 2019-Jul-19: my color tables up to number 40 only
+      cgloadct,10,/brewer,clip=[20,225]  ; MWL 2019-Jul-19: my color tables up to number 40 only
       stretch,0,255,0.7
 ;      cgloadct,65
       cgimage,mapscl,/keep,pos=pos_ifsfov[*,0],opos=truepos,$
@@ -2244,8 +2246,7 @@ pro ifsf_makemaps,initproc
                            stretch=initmaps.ct.stretch)
          if size_subim[1] lt resampthresh OR size_subim[2] lt resampthresh then $
             mapscl = rebin(mapscl,size_subim[1]*samplefac,size_subim[2]*samplefac,/sample)
-      cgloadct,10,/brewer  ; MWL 2019-Jul-19: my color tables up to number 40 only
-      stretch,0,255,0.7
+      cgloadct,10,/brewer,clip=[20,225]  ; MWL 2019-Jul-19: my color tables up to number 40 only
 ;      cgloadct,65
          cgimage,mapscl,/keep,pos=pos_ifsfov[*,1],opos=truepos,$
                  /noerase,missing_value=bad,missing_index=255,$
@@ -2286,8 +2287,7 @@ pro ifsf_makemaps,initproc
       mapscl = cgimgscl(rebin(ctmap,dx*samplefac,dy*samplefac,/sample),$
                         minval=zran[0],max=zran[1],$
                         stretch=initmaps.ct.stretch,beta=beta)                        
-      cgloadct,10,/brewer  ; MWL 2019-Jul-19: my color tables up to number 40 only
-      stretch,0,255,0.7
+      cgloadct,10,/brewer,clip=[20,225]  ; MWL 2019-Jul-19: my color tables up to number 40 only
 ;      cgloadct,65
       cgimage,mapscl,/keep,pos=pos_ifsfov[*,fix(npanels_ifsfov) - 1],$
               opos=truepos,/noerase,missing_value=bad,missing_index=255,$
@@ -2452,8 +2452,7 @@ pro ifsf_makemaps,initproc
 ;                        minval=zran[0],max=zran[1],stretch=initmaps.ct.stretch)
       mapscl = cgimgscl(rebin(alog10(ctmap),dx*samplefac,dy*samplefac,/sample),$
                         minval=zran[0],max=zran[1],stretch=initmaps.ct.stretch)
-      cgloadct,10,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-      stretch,0,255,0.7
+      cgloadct,10,/brewer,/reverse,clip=[20,225]  ; MWL 2019-Jul-19: my color tables up to number 40 only
 ;      cgloadct,65,/reverse
       cgimage,mapscl,/keep,pos=pos_bot[*,0],opos=truepos,$
               /noerase,missing_value=bad,missing_index=255,$
@@ -2509,8 +2508,7 @@ pro ifsf_makemaps,initproc
 ;                           minval=zran[0],max=zran[1],stretch=initmaps.ct.stretch)
          mapscl = cgimgscl(rebin(alog10(qso_map),dx*samplefac,dy*samplefac,/sample),$
                         minval=zran[0],max=zran[1],stretch=initmaps.ct.stretch)
-         cgloadct,10,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-         stretch,0,255,0.7
+         cgloadct,10,/brewer,/reverse,clip=[20,225]  ; MWL 2019-Jul-19: my color tables up to number 40 only
 ;         cgloadct,65,/reverse
          cgimage,mapscl,/keep,pos=pos_bot[*,1],opos=truepos,$
                  /noerase,missing_value=bad,missing_index=255,$
@@ -2563,8 +2561,7 @@ pro ifsf_makemaps,initproc
 ;                           minval=zran[0]),max=zran[1],stretch=initmaps.ct.stretch)
          mapscl = cgimgscl(rebin(alog10(host_map),dx*samplefac,dy*samplefac,/sample),$
                         minval=zran[0],max=zran[1],stretch=initmaps.ct.stretch)
-         cgloadct,10,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-         stretch,0,255,0.7
+         cgloadct,10,/brewer,/reverse,clip=[20,225]  ; MWL 2019-Jul-19: my color tables up to number 40 only
 ;         cgloadct,65,/reverse
          cgimage,mapscl,/keep,pos=pos_bot[*,2],opos=truepos,$
                  /noerase,missing_value=bad,missing_index=255,$
@@ -2597,8 +2594,7 @@ pro ifsf_makemaps,initproc
 ;                              stretch=initmaps.ct.stretch)
             mapscl = cgimgscl(rebin(alog10(scatt_map),dx*samplefac,dy*samplefac,/sample),$
                         minval=zran[0],max=zran[1],stretch=initmaps.ct.stretch)
-            cgloadct,10,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-            stretch,0,255,0.7
+            cgloadct,10,/brewer,/reverse,clip=[20,225]  ; MWL 2019-Jul-19: my color tables up to number 40 only
 ;            cgloadct,65,/reverse
             cgimage,mapscl,/keep,pos=pos_bot[*,3],opos=truepos,$
                     /noerase,missing_value=bad,missing_index=255,$
@@ -2825,8 +2821,7 @@ pro ifsf_makemaps,initproc
 
          mapscl = bytscl(rebin(map,dx*samplefac,dy*samplefac,/sample),$
                          min=plotdat[0],max=plotdat[1])
-         cgloadct,10,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-         stretch,0,255,0.7
+         cgloadct,10,/brewer,/reverse,clip=[20,225]  ; MWL 2019-Jul-19: my color tables up to number 40 only
 ;         cgloadct,65,/reverse
          cgimage,mapscl,/keep,pos=pos_top[*,1],opos=truepos,$
                  /noerase,missing_value=bad,missing_index=255,$
@@ -2929,8 +2924,7 @@ pro ifsf_makemaps,initproc
 
          mapscl = bytscl(rebin(map,dx*samplefac,dy*samplefac,/sample),$
                          min=plotdat[0],max=plotdat[1])
-         cgloadct,10,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-         stretch,0,255,0.7
+         cgloadct,10,/brewer,/reverse,clip=[20,225]  ; MWL 2019-Jul-19: my color tables up to number 40 only
 ;         cgloadct,65,/reverse
          cgimage,mapscl,/keep,pos=pos_top[*,npx-1],opos=truepos,$
                  /noerase,missing_value=bad,missing_index=255,$
@@ -3127,16 +3121,17 @@ pro ifsf_makemaps,initproc
                   endif
                
                   map[igd] = map[igd]/zmax_flux[0]
-                  if ctbd gt 0 then map[ibd] = bad
+;                  if ctbd gt 0 then map[ibd] = bad
+                  if ctbd gt 0 then map[ibd] = 0
                   mapscl = bytscl(rebin(map,dx*samplefac,dy*samplefac,/sample),$
                                   min=zran[0],max=zran[1])
    
 ;                 Plot image
-                  cgloadct,10,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-                  stretch,0,255,0.7
+                  cgloadct,10,/brewer,/reverse,clip=[20,225]  ; MWL 2019-Jul-19: my color tables up to number 40 only
 ;                  cgloadct,65,/reverse
                   cgimage,mapscl,/keep,pos=pos_top[*,j],opos=truepos,$
-                          noerase=iplot ne 0,missing_value=bad,missing_index=255,$
+;                          noerase=iplot ne 0,missing_value=bad,missing_index=255,$
+                          noerase=iplot ne 0,missing_value=0,missing_index=0,$
                           missing_color='white'
                   cgplot,[0],xsty=5,ysty=5,position=truepos,$
                          /nodata,/noerase,xran=[0,dx],yran=[0,dy]
@@ -3212,12 +3207,14 @@ pro ifsf_makemaps,initproc
  
                   if ctbd gt 0 then map[ibd] = bad
                   mapscl = bytscl(rebin(map,dx*samplefac,dy*samplefac,/sample),$
-                                  min=zran[0],max=zran[1])
-   
+                  ; MWL 2019-12-21: Cap color index to preserve a white background
+;                                  min=zran[0],max=zran[1])
+                                   min=zran[0],max=zran[1],top=254)
+                  mapscl[where(rebin(map,dx*samplefac,dy*samplefac,/sample) eq bad)] = 255
+
 ;                 Plot image
                   if stregex(vtags[j],'sig',/bool) then begin
-                     cgloadct,10,/brewer,/reverse
-                     stretch,0,255,0.7
+                     cgloadct,10,/brewer,/reverse,clip=[20,225]
                   endif else cgloadct,22,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
 ;                  if stregex(vtags[j],'sig',/bool) then cgloadct,65,/reverse $
 ;                  else cgloadct,74,/reverse
@@ -6838,6 +6835,8 @@ pro ifsf_makemaps,initproc
     
       if linelist.haskey('Halpha') then ofcompline = 'Halpha' $
       else if linelist.haskey('Hbeta') then ofcompline = 'Hbeta' $
+      ; MWL 2019-12-27: Choose Lya over other ions 
+      else if linelist.haskey('Lyalpha') then ofcompline = 'Lyalpha' $
       else begin
          linelistkeys = linelist.keys()
          ofcompline = linelistkeys[0]

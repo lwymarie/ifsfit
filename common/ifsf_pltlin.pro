@@ -165,7 +165,15 @@ pro ifsf_pltlin,instr,pltpar,outfile
                    xwin[1],ywin[1]]
         ydat = spectot
         ymod = modtot
-        yran = [min([ydat[ind],ymod[ind]]),max([ydat[ind],ymod[ind]])]
+        ; MWL 2019-11-28: Exclude [OI] air glow in determining plot range
+        OI5577 = ifsf_linelist('[OI]5577')
+        OIwave = OI5577['[OI]5577']
+        OIlo = min(abs(wave[ind]-(OIwave-3)),iOIlo)
+        OIhi = min(abs(wave[ind]-(OIwave+4.6)),iOIhi)  ; to cover vacuum wavelengths
+        iclean = ind
+        remove,findgen(iOIhi-iOIlo+1)+iOIlo,iclean
+        yran = [min([ydat[iclean],ymod[iclean]]),max([ydat[iclean],ymod[iclean]])]
+;        yran = [min([ydat[ind],ymod[ind]]),max([ydat[ind],ymod[ind]])]
         icol = double(i)/double(pltpar.nx)
         if icol eq fix(icol) then ytit = 'Fit' else ytit = ''
         cgplot,wave,ydat,xran=xran,yran=yran,pos=pos_fit,$
@@ -196,7 +204,15 @@ pro ifsf_pltlin,instr,pltpar,outfile
                    xwin[1],ywin[0]+0.3*dywin]
         ydat = specstars
         ymod = modstars
-        yran = [min([ydat[ind],ymod[ind]]),max([ydat[ind],ymod[ind]])]
+        ; MWL 2019-11-28: Exclude [OI] air glow in determining plot range
+        OI5577 = ifsf_linelist('[OI]5577')
+        OIwave = OI5577['[OI]5577']
+        OIlo = min(abs(wave[ind]-(OIwave-3)),iOIlo)
+        OIhi = min(abs(wave[ind]-(OIwave+4.6)),iOIhi)  ; to cover vacuum wavelengths
+        iclean = ind
+        remove,findgen(iOIhi-iOIlo+1)+iOIlo,iclean
+        yran = [min([ydat[iclean],ymod[iclean]]),max([ydat[iclean],ymod[iclean]])]
+;        yran = [min([ydat[ind],ymod[ind]]),max([ydat[ind],ymod[ind]])]
         if icol eq fix(icol) then ytit = 'Residual' else ytit = ''
         cgplot,wave,ydat,xran=xran,yran=yran,/noerase,ytit=ytit,$
                axiscol='White',col='White',/norm,pos=pos_res,/xsty,/ysty,thick=1

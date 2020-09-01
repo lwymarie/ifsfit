@@ -116,7 +116,8 @@
 ;                       profile
 ;      2018may30, DSNR, added option to adjust XTOL and FTOL for line fitting
 ;      2018jun25, DSNR, added NOEMLINMASK switch, distinct from NOEMLINFIT
-;         
+;      2019nov08, MWL,
+;
 ; :Copyright:
 ;    Copyright (C) 2013--2018 David S. N. Rupke
 ;
@@ -139,7 +140,7 @@ function ifsf_fitspec,lambda,flux,err,dq,zstar,linelist,linelistz,$
                       ncomp,initdat,maskwidths=maskwidths,$
                       peakinit=peakinit,quiet=quiet,siginit_gas=siginit_gas,$
                       siglim_gas=siglim_gas,tweakcntfit=tweakcntfit,$
-                      col=col,row=row
+                      col=col,row=row,goodcomp=goodcomp
 
   flux_out = flux
   err_out = err
@@ -539,11 +540,11 @@ function ifsf_fitspec,lambda,flux,err,dq,zstar,linelist,linelistz,$
      call_function(initdat.fcninitpar,linelist,linelistz,$
                    initdat.linetie,peakinit,siginit_gas,initdat.maxncomp,$
                    ncomp,siglim=siglim_gas,$
-                   _extra=initdat.argsinitpar) $
+                   _extra=initdat.argsinitpar,goodcomp=goodcomp) $  ; MWL 2019-10-18
   else parinit = $
      call_function(initdat.fcninitpar,linelist,linelistz,$
                    initdat.linetie,peakinit,siginit_gas,initdat.maxncomp,$
-                   ncomp,siglim=siglim_gas)
+                   ncomp,siglim=siglim_gas,goodcomp=goodcomp)  ; MWL 2019-10-18
 
   testsize = size(parinit)
   if testsize[0] eq 0 then begin
