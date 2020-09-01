@@ -84,6 +84,8 @@ Optional structure tags from initialization procedure:
 
   argscontfit: in, optional, type=structure
     Arguments for continuum fit routine.
+    For PPXF: add_poly_degree: in, optional, type=integer, default=4
+    	         Degree of additive polynomial.
   argsinitpar: in, optional, type=structure
     Arguments for parameter initialization routine.
   argslinefit: in, optional, type=structure
@@ -109,6 +111,9 @@ Optional structure tags from initialization procedure:
     Extension # for dq plane in data cube.
   donad: in, optional, type=byte
     Run NaD analysis (normalization and finding weq) in IFSFA.
+  emlkeeperr: in, optional, type=byte
+    If set, keep the flux errors untouched even when the line is
+    removed by EMLSIGCUT.
   emlsigcut: in, optional, type=double
     Threshold sigma for filtering individual emission lines in IFSFA.
   fcncheckcomp: in, optional, type=string

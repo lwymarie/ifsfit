@@ -99,7 +99,7 @@ pro ifsf_fitnad,initproc,cols=cols,rows=rows,nsplit=nsplit,verbose=verbose,$
    maxncomp = initnad.maxncomp
 
    ; Get linelist
-   linelist = ifsf_linelist(['NaD1','NaD2','HeI5876'])
+   linelist = ifsf_linelist(['NaD1','NaD2','HeI5876'],/quiet)
 
    if tag_exist(initnad,'taumax') then taumax=initnad.taumax $
    else taumax = 5d
@@ -607,12 +607,14 @@ pro ifsf_fitnad,initproc,cols=cols,rows=rows,nsplit=nsplit,verbose=verbose,$
             if tag_exist(initnad,'argspltfitnad') then $
                ifsf_pltnadfit,(nadcube.wave)[i,j,*],$
                               (nadcube.dat)[i,j,*],$
+                              (nadcube.err)[i,j,*],$
                               param,outfile+'_nad_fit',zref,$
                               specres=specres,zstar=zstar,$
                               _extra=initnad.argspltfitnad $
             else $
                ifsf_pltnadfit,(nadcube.wave)[i,j,*],$
                               (nadcube.dat)[i,j,*],$
+                              (nadcube.err)[i,j,*],$
                               param,outfile+'_nad_fit',zref,$
                               specres=specres,zstar=zstar
          endif

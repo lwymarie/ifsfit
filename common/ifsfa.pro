@@ -157,12 +157,17 @@ pro ifsfa,initproc,cols=cols,rows=rows,noplots=noplots,oned=oned,$
 
   if ~ tag_exist(initdat,'noemlinfit') then begin
 ;    Get linelist
-     linelist = ifsf_linelist(initdat.lines)
+     if tag_exist(initdat,'argslinelist') then $
+        linelist = ifsf_linelist(initdat.lines,_extra=initdat.argslinelist) $
+     else linelist = ifsf_linelist(initdat.lines)
      nlines = linelist.count()
 ;    Linelist with doublets to combine
      emldoublets = [['[SII]6716','[SII]6731'],$
                     ['[OII]3726','[OII]3729'],$
-                    ['[NI]5198','[NI]5200']]
+                    ['[NI]5198','[NI]5200'],$
+                    ['[NeIII]3869','[NeIII]3967'],$
+                    ['[NeV]3345','[NeV]3426'],$
+                    ['MgII2796','MgII2803']]
      sdoub = size(emldoublets)
      if sdoub[0] eq 1 then ndoublets = 1 else ndoublets = sdoub[2]
      lines_with_doublets = initdat.lines
@@ -173,7 +178,11 @@ pro ifsfa,initproc,cols=cols,rows=rows,noplots=noplots,oned=oned,$
            lines_with_doublets = [lines_with_doublets,dkey]
         endif
      endfor
-     linelist_with_doublets = ifsf_linelist(lines_with_doublets)
+     if tag_exist(initdat,'argslinelist') then $
+        linelist_with_doublets = $
+           ifsf_linelist(lines_with_doublets,_extra=initdat.argslinelist) $
+     else  linelist_with_doublets = $
+           ifsf_linelist(lines_with_doublets)
   endif
 
   if tag_exist(initdat,'fcnpltcont') then $
@@ -481,9 +490,17 @@ pro ifsfa,initproc,cols=cols,rows=rows,noplots=noplots,oned=oned,$
 
 ;       Create / populate output data cubes                            
         if firstcontproc then begin
+           hostcube = $
+              {dat: dblarr(cube.ncols,cube.nrows,cube.nz),$
+               err: dblarr(cube.ncols,cube.nrows,cube.nz),$
+               dq:  dblarr(cube.ncols,cube.nrows,cube.nz), $
+               norm_div: dblarr(cube.ncols,cube.nrows,cube.nz), $
+               norm_sub: dblarr(cube.ncols,cube.nrows,cube.nz) $
+              }
            if tag_exist(initdat,'decompose_ppxf_fit') then begin
               contcube = $
                  {wave: struct.wave,$
+                  all_mod: dblarr(cube.ncols,cube.nrows,cube.nz),$
                   stel_mod: dblarr(cube.ncols,cube.nrows,cube.nz),$
                   poly_mod: dblarr(cube.ncols,cube.nrows,cube.nz),$
                   stel_mod_tot: dblarr(cube.ncols,cube.nrows)+bad,$
@@ -513,14 +530,10 @@ pro ifsfa,initproc,cols=cols,rows=rows,noplots=noplots,oned=oned,$
                   stel_ebv: dblarr(cube.ncols,cube.nrows)+bad, $
                   stel_ebv_err: dblarr(cube.ncols,cube.nrows,2)+bad $
                  }
-              hostcube = $
-                 {dat: dblarr(cube.ncols,cube.nrows,cube.nz),$
-                  err: dblarr(cube.ncols,cube.nrows,cube.nz),$
-                  dq:  dblarr(cube.ncols,cube.nrows,cube.nz) $
-                 }
            endif else begin
               contcube = $
-                 {stel_z: dblarr(cube.ncols,cube.nrows)+bad,$
+                 {all_mod: dblarr(cube.ncols,cube.nrows,cube.nz),$
+                  stel_z: dblarr(cube.ncols,cube.nrows)+bad,$
                   stel_z_err: dblarr(cube.ncols,cube.nrows,2)+bad,$
                   stel_rchisq: dblarr(cube.ncols,cube.nrows)+bad,$
                   stel_ebv: dblarr(cube.ncols,cube.nrows)+bad, $
@@ -529,6 +542,11 @@ pro ifsfa,initproc,cols=cols,rows=rows,noplots=noplots,oned=oned,$
            endelse
            firstcontproc=0
         endif
+        hostcube.dat[i,j,struct.fitran_indx] = struct.cont_dat
+        hostcube.err[i,j,struct.fitran_indx] = err[struct.fitran_indx]
+        hostcube.dq[i,j,struct.fitran_indx] = dq[struct.fitran_indx]
+        hostcube.norm_div[i,j,struct.fitran_indx] = struct.cont_dat / struct.cont_fit
+        hostcube.norm_sub[i,j,struct.fitran_indx] = struct.cont_dat - struct.cont_fit
         if tag_exist(initdat,'decompose_ppxf_fit') then begin
            add_poly_degree = 4d ; this must be the same as in IFSF_FITSPEC
            if tag_exist(initdat,'argscontfit') then $
@@ -548,6 +566,7 @@ pro ifsfa,initproc,cols=cols,rows=rows,noplots=noplots,oned=oned,$
            cont_fit_stel = struct.cont_fit - cont_fit_poly
 ;          Total flux from different components
            cont_fit_tot = total(struct.cont_fit)
+           contcube.all_mod[i,j,struct.fitran_indx] = struct.cont_fit
            contcube.stel_mod[i,j,struct.fitran_indx] = cont_fit_stel
            contcube.poly_mod[i,j,struct.fitran_indx] = cont_fit_poly
            contcube.stel_mod_tot[i,j] = total(cont_fit_stel)
@@ -630,7 +649,7 @@ pro ifsfa,initproc,cols=cols,rows=rows,noplots=noplots,oned=oned,$
                     [struct.ct_ppxf_sigma_err,struct.ct_ppxf_sigma_err]
                  if tag_exist(struct,'ct_errors') then $
                     contcube.stel_z_err[i,j,*] = struct.ct_errors['zstar'] $
-                 else contcube.stel_z_err[i,j] = $
+                 else contcube.stel_z_err[i,j,*] = $
                     [struct.zstar_err,struct.zstar_err]
               endif else begin
                  par_qsohost = struct.ct_coeff
@@ -643,7 +662,7 @@ pro ifsfa,initproc,cols=cols,rows=rows,noplots=noplots,oned=oned,$
                               /qsoonly,blrterms=blrterms,qsoscl=qsomod_polynorm,$
                               qsoord=qsoord,hostord=hostord
               hostmod = struct.cont_fit_pretweak - qsomod
-;             If continuum is tweaked in any region, divide the resulting
+;             If continuum is tweaked in any region, subide the resulting
 ;             residual proportionally (at each wavelength) between the QSO
 ;             and host components.
               qsomod_notweak = qsomod
@@ -675,15 +694,22 @@ pro ifsfa,initproc,cols=cols,rows=rows,noplots=noplots,oned=oned,$
               hostmod = struct.cont_fit - qsomod
            endif
         endif else begin
+           contcube.all_mod[i,j,struct.fitran_indx] = struct.cont_fit
            contcube.stel_z[i,j] = struct.zstar
            if tag_exist(struct,'ct_errors') then $
               contcube.stel_z_err[i,j,*] = struct.ct_errors['zstar'] $
-           else contcube.stel_z_err[i,j,*] = [struct.zstar_err,struct.zstar_err]
+;          for backwards compatibility
+           else if tag_exist(struct,'zstar_err') then $
+              contcube.stel_z_err[i,j,*] = [struct.zstar_err,struct.zstar_err] $
+           else contcube.stel_z_err[i,j,*] = [0,0]
         endelse
         contcube.stel_ebv[i,j] = struct.ct_ebv
         if tag_exist(struct,'ct_errors') then $
            contcube.stel_ebv_err[i,j,*] = struct.ct_errors['ct_ebv']
-        contcube.stel_rchisq[i,j] = struct.ct_rchisq
+;       for backwards compatibility
+        if tag_exist(struct,'stel_rchisq') then $
+           contcube.stel_rchisq[i,j] = struct.ct_rchisq $
+        else contcube.stel_rchisq[i,j] = 0d
 
 
 ;       Print PPXF results to STDOUT
@@ -760,11 +786,10 @@ pro ifsfa,initproc,cols=cols,rows=rows,noplots=noplots,oned=oned,$
               contcube.host_mod[i,j,struct.fitran_indx] -= polymod_refit
 ;          Data minus (emission line model + QSO model)
 ;           contcube.host_dat[i,j,*] = struct.cont_dat - qsomod
+;          Update hostcube.dat to remove tweakcnt mods
 ;          Data minus (emission line model + QSO model, tweakcnt mods not 
 ;          included in QSO model)
            hostcube.dat[i,j,struct.fitran_indx] = struct.cont_dat - qsomod_notweak
-           hostcube.err[i,j,struct.fitran_indx] = err[struct.fitran_indx]
-           hostcube.dq[i,j,struct.fitran_indx] = dq[struct.fitran_indx]
            if ~keyword_set(noplots) AND $
               total(struct_host.cont_fit) ne 0d then begin
               if tag_exist(initdat.argscontfit,'refit') then begin
@@ -1034,14 +1059,17 @@ pro ifsfa,initproc,cols=cols,rows=rows,noplots=noplots,oned=oned,$
            if ctbd gt 0 then begin
               emlweq['ftot',line,ibd] = bad
               emlflx['ftot',line,ibd] = bad
-              emlflxerr['ftot',line,ibd] = bad
+              if ~ tag_exist(initdat,'emlkeeperr') then $
+                 emlflxerr['ftot',line,ibd] = bad
               for k=0,initdat.maxncomp-1 do begin
                  cstr='c'+string(k+1,format='(I0)')
                  emlweq['f'+cstr,line,ibd] = bad
                  emlflx['f'+cstr,line,ibd] = bad
-                 emlflxerr['f'+cstr,line,ibd] = bad
                  emlflx['f'+cstr+'pk',line,ibd] = bad
-                 emlflxerr['f'+cstr+'pk',line,ibd] = bad
+                 if ~ tag_exist(initdat,'emlkeeperr') then begin
+                    emlflxerr['f'+cstr,line,ibd] = bad
+                    emlflxerr['f'+cstr+'pk',line,ibd] = bad
+                 endif
                  emlwav[cstr,line,ibd] = bad
                  emlwaverr[cstr,line,ibd] = bad
                  emlsig[cstr,line,ibd] = bad
@@ -1071,8 +1099,7 @@ pro ifsfa,initproc,cols=cols,rows=rows,noplots=noplots,oned=oned,$
   ;     tag_exist(initdat,'decompose_qso_fit') then $
   save,contcube,file=initdat.outdir+initdat.label+'.cont.xdr'
 
-   if tag_exist(initdat,'decompose_qso_fit') AND $
-      tag_exist(initdat,'host') then begin
+   if tag_exist(initdat,'host') then begin
 ;     Change initial wavelength -- use last restored fit structure. For some 
 ;     reason SXADDPAR doesn't work when applied directly to structures, so
 ;     create new variables.
@@ -1142,6 +1169,26 @@ pro ifsfa,initproc,cols=cols,rows=rows,noplots=noplots,oned=oned,$
          endelse
          if writewaveext then $
             writefits,initdat.host.dat_fits,cube.wave,header.wave,/append
+         if tag_exist(initdat.host,'norm_div') then begin
+            if datext lt 0 then begin
+               writefits,initdat.host.norm_div,hostcube.norm_div,newheader_dat
+            endif else begin
+               writefits,initdat.host.norm_div,cube.phu,header.phu
+               writefits,initdat.host.norm_div,hostcube.norm_div,newheader_dat,/append
+            endelse
+            if writewaveext then $
+               writefits,initdat.host.norm_div,cube.wave,header.wave,/append
+         endif
+         if tag_exist(initdat.host,'norm_sub') then begin
+            if datext lt 0 then begin
+               writefits,initdat.host.norm_sub,hostcube.norm_sub,newheader_dat
+            endif else begin
+               writefits,initdat.host.norm_sub,cube.phu,header.phu
+               writefits,initdat.host.norm_sub,hostcube.norm_sub,newheader_dat,/append
+            endelse
+            if writewaveext then $
+               writefits,initdat.host.norm_sub,cube.wave,header.wave,/append
+         endif
       endelse
    endif
 

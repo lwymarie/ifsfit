@@ -35,7 +35,10 @@ IDL libraries:
   http://www.sdss.org/dr13/software/idlutils/
 - DRTOOLS, for multicore processing
   https://github.com/drupke/drtools
-  
+
+These libraries must be downloaded by the end user and installed in a
+location that is in the IDL path.
+
 Note that the IDL Astronomy User's Library ships with some Coyote
 routines, and IDLUTILS ships with the IDL Astronomy User's Library and
 MPFIT. However, it's not clear how well these libraries keep track of
@@ -51,6 +54,9 @@ http://www.iaa.csic.es/~rosa/research/synthesis/HRES/ESPS-HRES.html
 
 The enclosed routine IFSF_GDTEMP can be used to convert these tables
 into a form readable by IFSF.
+
+IFSFIT also ships with the external routine CONSEC.PRO written by John
+Johnson.
 
 -------------------------------------------------------------------------
 USAGE
@@ -108,6 +114,79 @@ other instruments and to include parameters (like fixed line ratios)
 for other emission lines. The code has in the past been used to
 successfully fit data from many instruments: GMOS, LRIS, NIFS, OSIRIS,
 and WiFeS.
+
+-------------------------------------------------------------------------
+COOKBOOK FOR QSO DEBLENDING
+-------------------------------------------------------------------------
+
+(0) Create nuclear template
+
+    IDL> ifsf_makeqsotemplate,'nuclearspectrum.fits','nucleartemplate.xdr'
+
+(1) Fit total spectra with quasar + exponential starlight model +
+    emission lines.
+(2) Calculate starlight-only spectra.
+
+    In the initialization file, the REFIT tag under the ARGSCONTFIT
+    tag should be commented out. The tag QSOXDR under ARGSCONTFIT
+    should equal the path and filename of the template created in step
+    (0). The HOST tag should be a structure with one tag, DAT_FITS
+    that gives the path and filename of the output starlight-only
+    file.
+
+    IDL> ifsf,'ifsf_qsodeblend_example'
+    IDL> ifsfa,'ifsf_qsodeblend_example'
+
+    Output: starlight.fits
+
+(3) Spatially integrate spectra
+
+    IDL> ifsr_spaxsum,'starlight.fits','starlight_spatiallyintegrated.fits',[x1,y1,x2,y2]
+    IDL> ifsr_spaxsum,'datacube.fits','totalspectrum.fits',[x1,y1,x2,y2]
+
+(4) Fit spatially-integrated starlight spectrum with stellar
+    templates. Stellar templates must be included with the
+    STARTEMPFILE tag.
+
+    IDL> ifsf,'ifsf_qsodeblend_example_host',/oned
+    IDL> ifsfa,'ifsf_qsodeblend_example_host',/oned
+
+(5) Fit spatially-integrated total spectrum with quasar + stellar
+    templates + polynomial + emission lines.
+
+    IDL> ifsf,'ifsf_qsodeblend_example_total',/oned
+         ifsfa,'ifsf_qsodeblend_example_total',/oned
+
+(6) Choose best-fit SPS model from steps (4) and (5) and sum over
+    ages.
+
+    Re-run IFSF/IFSFA on chosen model (host or total) and then run:
+
+    IDL> ifsf_makestellartemplate,'/path/fitdir/galaxyshorthand_0001.xdr','/path/starlighttemplate.xdr'
+
+(7) Fit total spectra with quasar + SPS starlight model + emission
+    lines.
+(8) Calculate starlight-only spectra.
+
+    Uncomment REFIT and STARTEMPFILE tags in IFSF_QSODEBLEND_EXAMPLE,
+    and change name of DAT_FITS file under HOST tag so that previous
+    starlight spectra are not overwritten.
+
+    IDL> ifsf,'ifsf_qsodeblend_example'
+    	 ifsfa,'ifsf_qsodeblend_example'
+
+(9) Spatially integrate spectra.
+
+    IDL> ifsr_spaxsum,'/path/starlight_iter1.fits','/path/starlight_spatiallyintegrated_iter1.fits',[x1,y1,x2,y2]
+
+(10) Fit spatially-integrated starlight spectrum.
+
+    IDL> ifsf,'ifsf_qsodeblend_host',/oned
+	 ifsfa,'ifsf_qsodeblend_host',/oned
+
+(11) Compare SPS fits to starlight-only spectrum. Iterate from step 6
+     if (significantly) different. Finish if same (within tolerance).
+
 
 -------------------------------------------------------------------------
 IMPORTANT NOTES
@@ -208,6 +287,39 @@ running Mac OS X El Capitan and the MacPorts X11 tools.)
    library. The leading '_' must be dropped.
 
 -------------------------------------------------------------------------
+EXTINCTION CORRECTIONS
+-------------------------------------------------------------------------
+
+To calculate gas E(B-V) in IFSF_MAKEMAPS, switch on the EBV tag in
+INIT as in the IFSF_QSODEBLEND_EXAMPLE.PRO initialization file. This
+calculates EBV for total flux (summed over components) and the flux on
+a component-by-component basis. The TITLE tags are plot labels, and
+selecting APPLY produces corrected fluxes, outputs them to a file, and
+applies the extinction correction to the spatially-integrated total
+fluxes and to Halpha line fluxes, masses, energies, and momenta
+computed in any outflow calculation. It does not presently apply the
+extinction correction to line ratios or to plots of line flux maps.
+
+Presently the correction is only done using the E(B-V) calculated from
+the total flux (summed over components). I.e., you can correct the
+flux on a component-by-component basis but it uses the total (summed
+over components) E(B-V). IFSFIT will output the corrected fluxes into
+XDR files with suffixes '.emlflxcor_pp.xdr' and
+'.emlflxcor_med.xdr'. The '_pp' version does a correction on a
+per-pixel basis, and uses the median value if E(B-V) could not be
+calculated. The ‘_med’ version uses the median E(B-V) (calculated as a
+spatial median) from the entire map. The WINDSTR output from
+IFSF_MAKEMAPS will also contain the spatially-integrated corrected
+fluxes in the tag E_FLUX_TOT. This in turn contains the
+extinction-corrected, spatially-integrated fluxes in the structure
+tags COMP_UNEXT_PP, COMP_UNEXT_MED, TOT_UNEXT_PP, and TOT_UNEXT_MED.
+
+IFSFIT can implement E(B-V) on the stellar continuum within PPXF; set
+EBV_STAR = 1 in INIT. It will Monte Carlo the errors over NITER
+iterations on stellar E(B-V) by setting MCERRORS = {niter:
+YOUR_VALUE_HERE}.
+
+-------------------------------------------------------------------------
 QUESTIONS? BUGS? WANT TO MODIFY THE CODE?
 -------------------------------------------------------------------------
 
@@ -220,7 +332,7 @@ Modifications are encouraged, but subject to the license.
 LICENSE AND COPYRIGHT
 -------------------------------------------------------------------------
 
-Copyright (C) 2013--2017 David S. N. Rupke
+Copyright (C) 2013--2020 David S. N. Rupke
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

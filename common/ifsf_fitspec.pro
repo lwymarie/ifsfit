@@ -218,7 +218,11 @@ function ifsf_fitspec,lambda,flux,err,dq,zstar,linelist,linelistz,$
   if tag_exist(initdat,'fitran') then fitran_tmp = initdat.fitran $
   else fitran_tmp = [lambda[0],lambda[n_elements(lambda)-1]]
 ; indices locating good data and data within fit range
-  gd_indx_full = where(flux ne 0 AND err gt 0 AND ~ finite(err,/infinity) AND $
+  gd_indx_full = where(flux ne 0 AND err gt 0 $
+                       AND ~ finite(flux,/nan) $
+                       AND ~ finite(flux,/infinity) $
+                       AND ~ finite(err,/nan) $
+                       AND ~ finite(err,/infinity) AND $
                        dq eq 0 AND $
                        lambda ge min(templatelambdaz) AND $
                        lambda le max(templatelambdaz) AND $
@@ -227,10 +231,14 @@ function ifsf_fitspec,lambda,flux,err,dq,zstar,linelist,linelistz,$
 
   fitran = [min(lambda[gd_indx_full]),max(lambda[gd_indx_full])]
 
-; Find where flux is <= 0 or error is <= 0 or infinite. 
+; Find where flux is <= 0 or error is <= 0 or infinite or NaN
 ; (Otherwise MPFIT chokes.)
   neg_indx = where(flux lt 0,ctneg)
-  zerinf_indx = where(flux eq 0 OR err le 0 OR finite(err,/infinity),ctzerinf)
+  zerinf_indx = where(flux eq 0 OR err le 0 $
+                      OR finite(flux,/infinity) $
+                      OR finite(flux,/nan) $
+                      OR finite(err,/infinity) $
+                      OR finite(err,/nan),ctzerinf)
   maxerr = max(err[gd_indx_full])
 ;  if ctneg gt 0 then begin
 ;     flux[neg_indx]=-1d*flux[neg_indx]
@@ -241,8 +249,8 @@ function ifsf_fitspec,lambda,flux,err,dq,zstar,linelist,linelistz,$
   if ctzerinf gt 0 then begin
      flux[zerinf_indx]=median(flux[gd_indx_full])
      err[zerinf_indx]=maxerr*100d
-     if not quiet then print,'Setting ',ctzerinf,' points from zero flux or '+$
-        'neg./zero/inf. error to med(flux) and max(err)x100.',format='(A,I0,A)'
+     if not quiet then print,'Setting ',ctzerinf,' points from zero/inf./NaN flux or '+$
+        'neg./zero/inf./NaN error to med(flux) and max(err)x100.',format='(A,I0,A)'
   endif
 
 ; indices locating data within actual fit range

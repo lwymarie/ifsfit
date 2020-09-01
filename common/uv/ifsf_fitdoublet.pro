@@ -91,46 +91,43 @@
 ;    http://www.gnu.org/licenses/.
 ;
 ;-
-pro ifsf_fitdoublet,table,dir,galshort,doublet,$
+pro ifsf_fitdoublet,dir,galshort,doublet,fcngalinfo,$
                     cols=cols,rows=rows,verbose=verbose,$
                     noxdr=noxdr,noplot=noplot,weights=weights,$
-                    noerr=noerr,nomc=nomc,init=init
+                    noerr=noerr,nomc=nomc,init=init,$
+                    argsgalinfo=argsgalinfo
 
    bad = 1d99
    doublet_emrat_init = 1.5d
    c = 299792.458d
 
+   IF (doublet eq 'MgII') THEN linename = 'MgII2802'
    IF (doublet eq 'NV') THEN linename = 'NV1242'
    IF (doublet eq 'OVI') THEN linename = 'OVI1037'
    IF (doublet eq 'PV') THEN linename = 'PV1128'
+   IF (doublet eq 'FeIIUV1') THEN linename = 'FeII2585'
+   IF (doublet eq 'FeIIUV2') THEN linename = 'FeII2373'
 
    starttime = systime(1)
    time = 0
    if keyword_set(verbose) then quiet=0 else quiet=1
    if ~ keyword_set(noplot) then noplot=0 else noplot=1
 
-   ; Get fit initialization
-   trows=[3,81]
-   galshortlist = read_csvcol(table,'C',rows=trows,sep=',',type='string')
-   zlist = read_csvcol(table,'D',rows=trows,sep=',',junk=bad)
-   
-   selectionparameter=WHERE(galshortlist eq galshort)
-   galshort=galshortlist[selectionparameter[0]]
-   redshift=zlist[selectionparameter]
-   readcol, dir+galshort+'/'+galshort+doublet+'par_init.txt', $
-            profileshifts, profilesig, coveringfactor, opticaldepth, $
-            FORMAT='(A,D,D,D,D)',/silent
-   initproc = 'cos_'+galshort+doublet
-   initstr = call_function(initproc,dir, galshort, redshift, $
-                           profileshifts, profilesig, coveringfactor, $
-                           opticaldepth)
+   ; Get initial fit parameters and galaxy properties
+   redshift = 0d
+   if keyword_set(argsgalinfo) then begin
+      initstr = call_function(fcngalinfo,redshift,argsgalinfo=argsgalinfo)
+   endif else begin
+      initstr = call_function(fcngalinfo,redshift)
+   endelse
 
    maxncomp = initstr.maxncomp
    
    ; Get linelist
    linelist = $
       ifsf_linelist(['OVI1031','OVI1037','Lyalpha','Lybeta',$
-                     'NV1238','NV1242','PV1117','PV1128'])
+                     'NV1238','NV1242','PV1117','PV1128','MgII2795','MgII2802',$
+                     'FeII2585','FeII2599','FeII2373','FeII2382'])
 
    if tag_exist(initstr,'taumax') then taumax=initstr.taumax $
    else taumax = 5d
@@ -176,14 +173,14 @@ pro ifsf_fitdoublet,table,dir,galshort,doublet,$
 ;           Restore continuum + emission-line fit
             if oned then lab = string(i+1,format='(I04)') $
             else lab = string(i+1,'_',j+1,format='(I04,A,I04)')
-            infile = initstr.outdir+initstr.galaxy+ext
-            print, infile
+;            infile = initstr.outdir+initstr.galaxy+ext
+;            print, infile
             outfile = initstr.outdir+initstr.galaxy
-            if ~ file_test(infile) then begin
-               print,'IFSF_FITUVABS: No file for ',i+1,', ',j+1,'.',$
-                     format='(A0,I4,A0,I4,A0)'
-               goto,nofit
-            endif
+;            if ~ file_test(infile) then begin
+;               print,'IFSF_FITDOUBLET: No file for ',i+1,', ',j+1,'.',$
+;                     format='(A0,I4,A0,I4,A0)'
+;               goto,nofit
+;            endif
 ;            restore,file=infile
          endif
 
@@ -243,7 +240,8 @@ pro ifsf_fitdoublet,table,dir,galshort,doublet,$
          parinit = $
             call_function(initstr.fcninitpar,doublet,initabs,initem,$
                           initstr.doubletabs_siglim,doubletem_siglim,$
-                          doubletabsfix=doubletabsfix,doubletemfix=doubletemfix)
+                          doubletabsfix=doubletabsfix,doubletemfix=doubletemfix,$
+                          taumax=taumax)
 
 ;        Plot initial guess if requested
          if keyword_set(init) then begin
@@ -426,33 +424,67 @@ nofit:
    endfor
 
 ;  Velocity calculations
-   comps=N_ELEMENTS(profilesig)
-   zcomp=MAKE_ARRAY(2+4*comps)
+   comps=maxncomp
    delz=MAKE_ARRAY(comps)
    velocity=MAKE_ARRAY(comps)
    FOR M = 0, comps-1 DO BEGIN
       delz[M] = param[4+4*M]/(linelist[linename]*(1d + redshift)) - 1d
       velocity[M] = c*((delz[M]+1d)^2d -1d)/((delz[M]+1d)^2d +1d)
    ENDFOR
+
+
+;  Velocity calculations
+   if param[1] gt 0 then begin
+      comps_em=param[1]
+      delz=MAKE_ARRAY(comps)
+      velocity_em=MAKE_ARRAY(comps)
+      FOR M = 0, comps_em-1 DO BEGIN
+        delz[M] = param[2+param[0]*4+4*M]/(linelist[linename]*(1d + redshift)) - 1d
+        velocity_em[M] = c*((delz[M]+1d)^2d -1d)/((delz[M]+1d)^2d +1d)
+      ENDFOR
+   endif
     
 
 finish:
   
+   lineofdashes = strjoin(replicate('-',62))
+
    if ~ keyword_set(noxdr) then begin
       output=initstr.outdir+initstr.galaxy+doublet+'par_best.txt'
       openw, lun, output, /GET_LUN
-      printf, lun, param[0], '[Number of Absorption Components]',FORMAT='(I-3,A0)'
-      printf, lun, param[1], '[Number of Emission Components]',FORMAT='(I-3,A0)'
+      printf, lun, lineofdashes
+      printf, lun, 'Absorption',FORMAT='(A0)'
+      printf, lun, lineofdashes
+      printf, lun, param[0], '[Number of Components]',FORMAT='(I-3,A0)'
       printf, lun, weq.abs[0], ' [Total equivalent width in A]',FORMAT='(D0.4,A0)'
       printf, lun, vwtabs[0], ' [Weighted avg. vel. in km/s]',FORMAT='(D0.2,A0)'
       printf, lun, vwtabs[1], ' [Weighted RMS vel. in km/s]',FORMAT='(D0.2,A0)'
-      printf, lun,'Covering Factor','Optical Depth',$
-              'Wavelength(A)','Sigma(km/s)','Velocity(km/s)',$
-              FORMAT='(A-20,A-20,A-20,A-20,A-20)'
+      printf, lun, lineofdashes
+      printf, lun,'Cov. Factor','Tau',$
+              'Wave(A)','Sigma(km/s)','Vel(km/s)',$
+              FORMAT='(A-12,A-12,A-12,A-12,A-12)'
+      printf, lun, lineofdashes
       FOR M = 0, comps-1 DO BEGIN
          printf,lun, param[2+4*M:2+4*M+3],velocity[M],$
-                FORMAT='(F-20.4,F-20.4,F-20.4,F-20.4,F-20.4)'
+                FORMAT='(F-12.4,F-12.4,F-12.4,F-12.4,F-12.4)'
       ENDFOR
+      if param[1] gt 0 then begin
+         printf, lun, lineofdashes
+         printf, lun, 'Emission',FORMAT='(A0)'
+         printf, lun, lineofdashes
+         printf, lun, param[1], '[Number of Components]',FORMAT='(I-3,A0)'
+         printf, lun, lineofdashes
+         printf, lun,'Flux','2796/2803',$
+                'Wave(A)','Sigma(km/s)','Vel(km/s)',$
+                FORMAT='(A-12,A-12,A-12,A-12,A-12)'
+         printf, lun, lineofdashes
+         FOR M = 0, comps_em-1 DO BEGIN
+            printf,lun, param[2+4*param[0]+4*M+2:2+4*param[0]+4*M+3],$
+                   param[2+4*param[0]+4*M:2+4*param[0]+4*M+1],$
+                   velocity_em[M],$
+                   FORMAT='(F-12.4,F-12.4,F-12.4,F-12.4,F-12.4)'
+         ENDFOR
+      endif
       close, lun
       FREE_LUN, lun
    endif

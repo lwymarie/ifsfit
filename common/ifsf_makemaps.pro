@@ -1,9 +1,8 @@
 ;
 ;+
 ;
-; This procedure makes maps of various quantities. Contains four
-; helper routines: IFSF_PA, IFSF_PLOTRANGE, IFSF_PLOTCOMPASS,
-; IFSF_PLOTAXESNUC.
+; This procedure makes maps of various quantities. Contains one
+; helper routine: IFSF_PA.
 ;
 ; :Categories:
 ;    IFSFIT
@@ -96,110 +95,7 @@ function ifsf_pa,xaxis,yaxis
    if sizetmp[0] eq 0 then pa = pa[0]
    return,pa
 end
-
-pro ifsf_plotaxesnuc,xran_kpc,yran_kpc,xnuc,ynuc,nolab=nolab,toplab=toplab,$
-                     noxlab=noxlab,charsize=charsize,rightlab=rightlab,$
-                     nonuc=nonuc,colornuc=colornuc,noylab=noylab,$
-                     colorax=colorax
-   COMPILE_OPT IDL2, HIDDEN
-;   if not keyword_set(colorax) then colornuc = !P.color
-   if not keyword_set(charsize) then charsize=!P.charsize
-   if not keyword_set(nolab) then begin
-      if keyword_set(toplab) OR keyword_set(noxlab) then $
-         cgaxis,xaxis=0,xran=xran_kpc,/xsty,/save,xtickn=replicate(' ',60),$
-                color=colorax
-      if not keyword_set(noxlab) AND not keyword_set(toplab) then $
-         cgaxis,xaxis=0,xran=xran_kpc,/xsty,/save,charsize=charsize,$
-                color=colorax
-      if keyword_set(rightlab) then $
-         cgaxis,yaxis=1,yran=yran_kpc,/ysty,/save,charsize=charsize,$
-                color=colorax $
-      else $
-         cgaxis,yaxis=0,yran=yran_kpc,/ysty,/save,charsize=charsize,$
-                color=colorax
-   endif else begin
-      cgaxis,xaxis=0,xran=xran_kpc,/xsty,/save,xtickn=replicate(' ',60),$
-             color=colorax
-      cgaxis,yaxis=0,yran=yran_kpc,/ysty,/save,ytickn=replicate(' ',60),$
-             color=colorax
-   endelse
-   if not keyword_set(toplab) OR keyword_set(noxlab) then $
-      cgaxis,xaxis=1,xran=xran_kpc,xtickn=replicate(' ',60),/xsty,$
-             color=colorax
-   if keyword_set(toplab) AND $
-      not keyword_set(noxlab) AND $
-      not keyword_set(nolab) then $
-      cgaxis,xaxis=1,xran=xran_kpc,/xsty,charsize=charsize,$
-             color=colorax
-   if not keyword_set(rightlab) then $
-      cgaxis,yaxis=1,yran=yran_kpc,ytickn=replicate(' ',60),/ysty,$
-             color=colorax $
-   else $
-      cgaxis,yaxis=0,yran=yran_kpc,ytickn=replicate(' ',60),/ysty,$
-             color=colorax
-;   if not keyword_set(colornuc) then colornuc = !P.color
-   if not keyword_set(nonuc) then cgoplot,xnuc,ynuc,psym=1,color=colornuc
-end
-;
-pro ifsf_plotcompass,xarr,yarr,carr=carr,nolab=nolab,hsize=hsize,hthick=hthick
-   COMPILE_OPT IDL2, HIDDEN
-   if ~ keyword_set(carr) then carr='Black'
-   if ~ keyword_set(hsize) then hsize=!D.X_SIZE / 64
-   if ~ keyword_set(hthick) then hthick=1d
-   cgarrow,xarr[0],yarr[0],xarr[1],yarr[1],/data,/solid,color=carr,hsize=hsize,$
-           hthick=hthick
-   cgarrow,xarr[0],yarr[0],xarr[2],yarr[2],/data,/solid,color=carr,hsize=hsize,$
-           hthick=hthick
-   if ~ keyword_set(nolab) then begin
-      cgtext,xarr[3],yarr[3],'N',color=carr,align=0.5
-      cgtext,xarr[4],yarr[4],'E',color=carr,align=0.5
-   endif
-end
-;
-function ifsf_plotrange,auto=auto,$
-                        rline=rline,matline=matline,$
-                        rcomp=rcomp,matcomp=matcomp,$
-                        rquant=rquant,matquant=matquant,$
-                        rncbdiv=rncbdiv,rlo=rlo,rhi=rhi,$
-                        mapgd=mapgd,divinit=divinit,ncbdivmax=ncbdivmax
-;
-   if keyword_set(auto) then doauto=1 else doauto=0
-   if ~ doauto then begin
-      if keyword_set(rline) AND keyword_set(matline) AND $
-         keyword_set(rquant) AND keyword_set(matquant) AND $
-         keyword_set(rncbdiv) AND (keyword_set(rlo) OR keyword_set(rhi)) then begin
-         if keyword_set(rcomp) AND keyword_set(matcomp) then $
-            ithisline = where(rline eq matline AND $
-                              rcomp eq matcomp AND $
-                              rquant eq matquant,ctthisline) $
-         else $
-            ithisline = where(rline eq matline AND $
-                              rquant eq matquant,ctthisline)
-         if ctthisline eq 1 then begin
-            zran = [rlo[ithisline],rhi[ithisline]]
-            ncbdiv = rncbdiv[ithisline]
-            ncbdiv = ncbdiv[0]
-         endif else doauto=1
-      endif else doauto=1
-   endif
-   if doauto then begin
-      if keyword_set(mapgd) AND $
-         keyword_set(divinit) AND $
-         keyword_set(ncbdivmax) then begin
-         zran = [min(mapgd),max(mapgd)]
-         divarr = ifsf_cbdiv(zran,divinit,ncbdivmax)
-         ncbdiv = divarr[0]
-      endif else begin
-         message,'Proper keywords not specified.'
-      endelse
-   endif
-   return,[zran,zran[1]-zran[0],ncbdiv]
-end
-;
-;
 ;-------------------------------------------------------------------------------
-;
-;
 pro ifsf_makemaps,initproc
 
    fwhm2sig = 2d*sqrt(2d*alog(2d))
@@ -271,11 +167,18 @@ pro ifsf_makemaps,initproc
 ;  Get linelist
    if ~ tag_exist(initdat,'noemlinfit') then begin
       linelabels=1b
-      linelist = ifsf_linelist(initdat.lines,linelab=linelabels)
+      if tag_exist(initdat,'argslinelist') then $
+         linelist = ifsf_linelist(initdat.lines,linelab=linelabels,$
+                                  _extra=initdat.argslinelist) $
+      else $
+         linelist = ifsf_linelist(initdat.lines,linelab=linelabels)
 ;     Linelist with doublets to combine
-      emldoublets = [['[SII]6716','[SII]6731'],$
-                     ['[OII]3726','[OII]3729'],$
-                     ['[NI]5198','[NI]5200']]
+     emldoublets = [['[SII]6716','[SII]6731'],$
+                    ['[OII]3726','[OII]3729'],$
+                    ['[NI]5198','[NI]5200'],$
+                    ['[NeIII]3869','[NeIII]3967'],$
+                    ['[NeV]3345','[NeV]3426'],$
+                    ['MgII2796','MgII2803']]
       sdoub = size(emldoublets)
       if sdoub[0] eq 1 then ndoublets = 1 else ndoublets = sdoub[2]
       lines_with_doublets = initdat.lines
@@ -286,11 +189,21 @@ pro ifsf_makemaps,initproc
             lines_with_doublets = [lines_with_doublets,dkey]
          endif
       endfor
-      linelist_with_doublets = $
-         ifsf_linelist(lines_with_doublets,linelab=linelabels)
+      if tag_exist(initdat,'argslinelist') then $
+         linelist_with_doublets = $
+            ifsf_linelist(lines_with_doublets,linelab=linelabels,$
+                          _extra=initdat.argslinelist) $
+      else $
+         linelist_with_doublets = $
+            ifsf_linelist(lines_with_doublets,linelab=linelabels)
+
    endif
    if tag_exist(initdat,'donad') then $
-      nadlinelist = ifsf_linelist(['NaD1','NaD2','HeI5876'])
+      if tag_exist(initdat,'argslinelist') then $
+         nadlinelist = ifsf_linelist(['NaD1','NaD2','HeI5876'],$
+                                     _extra=initdat.argslinelist) $
+      else $
+         nadlinelist = ifsf_linelist(['NaD1','NaD2','HeI5876'])
 
 ;  Get range file
 ;
@@ -340,10 +253,6 @@ pro ifsf_makemaps,initproc
       tag_exist(initmaps,'noemlinfit') then begin
       message,'No emission line or absorption line data specified.'
    endif
-   
-;  Figure aspect ratio multiplier
-   if tag_exist(initmaps,'aspectrat') then aspectrat = initmaps.aspectrat $
-   else aspectrat = 1d
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Compute some things
@@ -351,7 +260,8 @@ pro ifsf_makemaps,initproc
 
 ;  Luminosity and angular size distances
    if tag_exist(initdat,'distance') then begin
-      asdist = initdat.distance
+      ldist = initdat.distance
+      asdist = ldist/(1d + initdat.zsys_gas)^2d
    endif else begin
 ; Planck 2018 parameters: https://ui.adsabs.harvard.edu/#abs/arXiv:1807.06209
       ldist = lumdist(initdat.zsys_gas,H0=67.4d,Omega_m=0.315d,Lambda0=0.685d,/silent)
@@ -369,7 +279,8 @@ pro ifsf_makemaps,initproc
    if not tag_exist(initdat,'datext') then datext=1 else datext=initdat.datext
    if not tag_exist(initdat,'varext') then varext=2 else varext=initdat.varext
    if not tag_exist(initdat,'dqext') then dqext=3 else dqext=initdat.dqext
-   datacube = ifsf_readcube(initdat.infile,/quiet,oned=oned,$
+   header=1
+   datacube = ifsf_readcube(initdat.infile,/quiet,oned=oned,header=header,$
                             datext=datext,varext=varext,dqext=dqext)
    if tag_exist(initmaps,'fluxfactor') then begin
       datacube.dat *= initmaps.fluxfactor
@@ -386,6 +297,20 @@ pro ifsf_makemaps,initproc
       datacube.dat /= rebin(initmaps.vornorm,dx,dy,dz)
    endif
 
+;  Image window
+   if tag_exist(initmaps,'plotwin') then begin
+      plotwin = initmaps.plotwin
+      dxwin = plotwin[2]-plotwin[0]+1
+      dywin = plotwin[3]-plotwin[1]+1
+   endif else begin
+      plotwin = [1,1,dx,dy]
+      dxwin = dx
+      dywin = dy
+   endelse
+   
+;  Figure aspect ratio multiplier
+   if tag_exist(initmaps,'aspectrat') then aspectrat = initmaps.aspectrat $
+   else aspectrat = 1d
 
 ;  HST data
    dohst=0
@@ -935,7 +860,7 @@ pro ifsf_makemaps,initproc
                       (map_y - qso_fitpar[5]+1)^2d)
       map_rnuckpc_ifs = map_rnuc * kpc_per_pix
       psf1d_x = dindgen(101)/100d*max(map_rnuckpc_ifs)
-      psf1d_y = alog10(drt_moffat(psf1d_x,[qso_fitpar[1],0d,$
+      psf1d_y = alog10(moffat(psf1d_x,[qso_fitpar[1],0d,$
                               qso_fitpar[2]*kpc_per_pix,$
                               qso_fitpar[7]]))
 
@@ -954,7 +879,20 @@ pro ifsf_makemaps,initproc
                          * kpc_per_pix
    center_nuclei_kpc_y = (center_nuclei[1,*] - center_axes[1]) $
                          * kpc_per_pix
-
+;  in image window
+   xwinran_kpc = double([-(center_axes[0]-0.5-(plotwin[0]-1)),$
+                         dxwin-(center_axes[0]-0.5-(plotwin[0]-1))]) $
+                        * kpc_per_pix
+   ywinran_kpc = double([-(center_axes[1]-0.5-(plotwin[1]-1)),$
+                         dywin-(center_axes[1]-0.5-(plotwin[1]-1))]) $
+                        * kpc_per_pix
+;   center_nuclei_kpc_xwin = (center_nuclei[0,*]-center_axes[0]-(plotwin[0]-1)) $
+;                            * kpc_per_pix
+;   center_nuclei_kpc_ywin = (center_nuclei[1,*]-center_axes[1]-(plotwin[1]-1)) $
+;                            * kpc_per_pix
+   center_nuclei_kpc_xwin = center_nuclei_kpc_x
+   center_nuclei_kpc_ywin = center_nuclei_kpc_y
+   
 ;  HST FOV
    if (dohstrd OR dohstbl) then begin
       if dohstbl then size_subim = size(bhst_fov) $
@@ -1006,14 +944,17 @@ pro ifsf_makemaps,initproc
                      (center_axes_hst[1]+initmaps.hstrd.nucoffset[1]))^2d)
             map_rkpc_rhst = map_r_rhst * initmaps.hstrd.platescale * kpc_per_as
          endif else map_rkpc_rhst = map_rkpc_hst 
-   endif
+   endif else map_rkpc_hst = 0d
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Process emission lines
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
    emlvel = 0d
+   emlflxcor_pp = 0d
+   emlflxcor_med = 0d
    ebv = 0d
+   ebvmed = 0d
    errebv = 0d
    lr = hash()
    lrerrlo = hash()
@@ -1117,6 +1058,10 @@ pro ifsf_makemaps,initproc
                emlflxcor_med = hash()
                emlflxerrcor_pp = hash()
                emlflxerrcor_med = hash()
+               emlflxcor_pp['ftot'] = hash()
+               emlflxcor_med['ftot'] = hash()
+               emlflxerrcor_pp['ftot'] = hash()
+               emlflxerrcor_med['ftot'] = hash()
                for icomp=1,initdat.maxncomp do begin
                   stric = string(icomp,format='(I0)')
                   emlflxcor_pp['fc'+stric] = hash()
@@ -1407,7 +1352,7 @@ pro ifsf_makemaps,initproc
                zdiff = $
                   tmpwaveabs/(nadlinelist['NaD1']*(1d + initdat.zsys_gas)) - 1d
                nadabsvel[i,j,0] = c_kms * ((zdiff+1d)^2d - 1d) / $
-                                  ((zdiff+1d)^2d + 1d)
+                                          ((zdiff+1d)^2d + 1d)
                errnadabsvel[i,j,0,*] = $
                   c_kms * (4d/(nadlinelist['NaD1']*(1d + initdat.zsys_gas))*$
                            ([zdiff,zdiff]+1d)/(([zdiff,zdiff]+1d)^2d + 1d)^2d) * $
@@ -1473,7 +1418,7 @@ pro ifsf_makemaps,initproc
                zdiff = reverse(tmpwaveabs[sortgd])/$
                        (nadlinelist['NaD1']*(1d + initdat.zsys_gas)) - 1d
                nadabsvel[i,j,1:ctgd] = c_kms * ((zdiff+1d)^2d - 1d) / $
-                                       ((zdiff+1d)^2d + 1d)
+                                               ((zdiff+1d)^2d + 1d)
                errnadabsvel[i,j,1:ctgd,*] = $
                   c_kms * (4d/(nadlinelist['NaD1']*(1d + initdat.zsys_gas))*$
                            (rebin(zdiff,1,1,ctgd,2)+1d)/$
@@ -1674,7 +1619,7 @@ pro ifsf_makemaps,initproc
 ;         (map_y - empsf_fitpar[5]+1)^2d)
 ;      map_rempsfkpc_ifs = map_rempsf * kpc_per_pix
 ;      empsf1d_x = dindgen(101)/100d*max(map_rempsfkpc_ifs)
-;      empsf1d_y = alog10(drt_moffat(empsf1d_x,[empsf_fitpar[1],0d,$
+;      empsf1d_y = alog10(moffat(empsf1d_x,[empsf_fitpar[1],0d,$
 ;         empsf_fitpar[2]*kpc_per_pix,$
 ;         empsf_fitpar[7]]))
 ;
@@ -1757,7 +1702,7 @@ pro ifsf_makemaps,initproc
       yifsline_tpos = yfracb*0.15d
    endif else begin
       ysize_in = 2.2d + ymargin_in
-      xsize_in = xmargin_in*1.5 + ifsimg_width_in
+      xsize_in = xmargin_in + ifsimg_width_in
       yfracb = ymargin_in/ysize_in
       yfract = 1d - ymargin_in*2d/ysize_in
       xfrac_margin = xmargin_in/xsize_in
@@ -1801,9 +1746,7 @@ pro ifsf_makemaps,initproc
          if size_subim[1] lt resampthresh OR size_subim[2] lt resampthresh then $
             mapscl = rebin(mapscl,size_subim[1]*samplefac,size_subim[2]*samplefac,/sample)
       endelse
-      cgloadct,10,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-      stretch,0,255,0.7
-;      cgloadct,65,/reverse
+      cgloadct,65,/reverse
       cgimage,mapscl,/keep,pos=pos_hstbig,opos=truepos,$
               /noerase,missing_value=bad,missing_index=255,$
               missing_color='white'
@@ -1852,9 +1795,7 @@ pro ifsf_makemaps,initproc
             mapscl = rebin(mapscl,size_subim[1]*samplefac,size_subim[2]*samplefac,/sample)
       endelse
 
-      cgloadct,10,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-      stretch,0,255,0.7
-;      cgloadct,65,/reverse
+      cgloadct,65,/reverse
       cgimage,mapscl,/keep,pos=pos_ifsfov[*,0],opos=truepos,$
              /noerase,missing_value=bad,missing_index=255,$
              missing_color='white'
@@ -1955,9 +1896,7 @@ pro ifsf_makemaps,initproc
                            stretch=stretch,beta=beta)
          if size_subim[1] lt resampthresh OR size_subim[2] lt resampthresh then $
             mapscl = rebin(mapscl,dx*samplefac,dy*samplefac,/sample)
-         cgloadct,10,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-         stretch,0,255,0.7
-;         cgloadct,65,/reverse
+         cgloadct,65,/reverse
          cgimage,mapscl,/keep,pos=pos_ifsfov[*,1],opos=truepos,$
                  /noerase,missing_value=bad,missing_index=255,$
                  missing_color='white'
@@ -2023,9 +1962,7 @@ pro ifsf_makemaps,initproc
       mapscl = cgimgscl(rebin(ctmap,dx*samplefac,dy*samplefac,/sample),$
                         minval=zran[0],max=zran[1],$
                         stretch=initmaps.ct.stretch,beta=beta)                        
-      cgloadct,10,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-      stretch,0,255,0.7
-;      cgloadct,65,/reverse
+      cgloadct,65,/reverse
       cgimage,mapscl,/keep,pos=pos_ifsfov[*,fix(npanels_ifsfov) - 1],$
               opos=truepos,/noerase,missing_value=bad,missing_index=255,$
               missing_color='white'
@@ -2184,9 +2121,7 @@ pro ifsf_makemaps,initproc
       mapscl = chst_big
       if size_subim[1] lt resampthresh OR size_subim[2] lt resampthresh then $
          mapscl = rebin(mapscl,size_subim[1]*samplefac,size_subim[2]*samplefac,/sample)
-      cgloadct,10,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-      stretch,0,255,0.7
-;      cgloadct,65,/reverse
+      cgloadct,65
       cgimage,mapscl,/keep,pos=pos_hstbig,opos=truepos,$
               /noerase,missing_value=bad,missing_index=255,$
               missing_color='white'
@@ -2215,9 +2150,7 @@ pro ifsf_makemaps,initproc
       mapscl = chst_fov
       if size_subim[1] lt resampthresh OR size_subim[2] lt resampthresh then $
          mapscl = rebin(mapscl,size_subim[1]*samplefac,size_subim[2]*samplefac,/sample)
-      cgloadct,10,/brewer  ; MWL 2019-Jul-19: my color tables up to number 40 only
-      stretch,0,255,0.7
-;      cgloadct,65
+      cgloadct,65
       cgimage,mapscl,/keep,pos=pos_ifsfov[*,0],opos=truepos,$
              /noerase,missing_value=bad,missing_index=255,$
              missing_color='white'
@@ -2244,9 +2177,7 @@ pro ifsf_makemaps,initproc
                            stretch=initmaps.ct.stretch)
          if size_subim[1] lt resampthresh OR size_subim[2] lt resampthresh then $
             mapscl = rebin(mapscl,size_subim[1]*samplefac,size_subim[2]*samplefac,/sample)
-      cgloadct,10,/brewer  ; MWL 2019-Jul-19: my color tables up to number 40 only
-      stretch,0,255,0.7
-;      cgloadct,65
+         cgloadct,65
          cgimage,mapscl,/keep,pos=pos_ifsfov[*,1],opos=truepos,$
                  /noerase,missing_value=bad,missing_index=255,$
                  missing_color='white'
@@ -2286,9 +2217,7 @@ pro ifsf_makemaps,initproc
       mapscl = cgimgscl(rebin(ctmap,dx*samplefac,dy*samplefac,/sample),$
                         minval=zran[0],max=zran[1],$
                         stretch=initmaps.ct.stretch,beta=beta)                        
-      cgloadct,10,/brewer  ; MWL 2019-Jul-19: my color tables up to number 40 only
-      stretch,0,255,0.7
-;      cgloadct,65
+      cgloadct,65
       cgimage,mapscl,/keep,pos=pos_ifsfov[*,fix(npanels_ifsfov) - 1],$
               opos=truepos,/noerase,missing_value=bad,missing_index=255,$
               missing_color='white'
@@ -2362,7 +2291,7 @@ pro ifsf_makemaps,initproc
       panel_in = 2d
       margin_in = 0.5d
       halfmargin_in = margin_in/2d
-      xsize_in = panel_in * npx + margin_in*1.5
+      xsize_in = panel_in * npx + margin_in
       aspectrat_fov=double(dx)/double(dy)
       ysize_in = margin_in*2d + panel_in * (1d + 1d/aspectrat_fov)
 ;  Sizes and positions of image windows in real and normalized coordinates
@@ -2438,13 +2367,13 @@ pro ifsf_makemaps,initproc
          y = alog10(gaussian(x,[1d,0d,fwhm/2.35]))
          cgoplot,x,y,color='Black'
 ;        Moffat, index = 1.5
-         y = alog10(drt_moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/1.5d)-1),1.5d]))
+         y = alog10(moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/1.5d)-1),1.5d]))
          cgoplot,x,y,color='Red',/linesty
 ;        Moffat, index = 2.5
-         y = alog10(drt_moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/2.5d)-1),2.5d]))
+         y = alog10(moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/2.5d)-1),2.5d]))
          cgoplot,x,y,color='Red'
 ;        Moffat, index = 5
-         y = alog10(drt_moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/5d)-1),5d]))
+         y = alog10(moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/5d)-1),5d]))
          cgoplot,x,y,color='Blue'
       endif     
 
@@ -2452,9 +2381,7 @@ pro ifsf_makemaps,initproc
 ;                        minval=zran[0],max=zran[1],stretch=initmaps.ct.stretch)
       mapscl = cgimgscl(rebin(alog10(ctmap),dx*samplefac,dy*samplefac,/sample),$
                         minval=zran[0],max=zran[1],stretch=initmaps.ct.stretch)
-      cgloadct,10,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-      stretch,0,255,0.7
-;      cgloadct,65,/reverse
+      cgloadct,65,/reverse
       cgimage,mapscl,/keep,pos=pos_bot[*,0],opos=truepos,$
               /noerase,missing_value=bad,missing_index=255,$
               missing_color='white'
@@ -2495,13 +2422,13 @@ pro ifsf_makemaps,initproc
 ;            y = alog10(gaussian(x,[1d,0d,fwhm/2.35]))
 ;            cgoplot,x,y,color='Black'
 ;;           Moffat, index = 1.5
-;            y = alog10(drt_moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/1.5d)-1),1.5d]))
+;            y = alog10(moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/1.5d)-1),1.5d]))
 ;            cgoplot,x,y,color='Red',/linesty
 ;;           Moffat, index = 2.5
-;            y = alog10(drt_moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/2.5d)-1),2.5d]))
+;            y = alog10(moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/2.5d)-1),2.5d]))
 ;            cgoplot,x,y,color='Red'
 ;;           Moffat, index = 5
-;            y = alog10(drt_moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/5d)-1),5d]))
+;            y = alog10(moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/5d)-1),5d]))
 ;            cgoplot,x,y,color='Blue'
 ;         endif
 
@@ -2509,9 +2436,7 @@ pro ifsf_makemaps,initproc
 ;                           minval=zran[0],max=zran[1],stretch=initmaps.ct.stretch)
          mapscl = cgimgscl(rebin(alog10(qso_map),dx*samplefac,dy*samplefac,/sample),$
                         minval=zran[0],max=zran[1],stretch=initmaps.ct.stretch)
-         cgloadct,10,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-         stretch,0,255,0.7
-;         cgloadct,65,/reverse
+         cgloadct,65,/reverse
          cgimage,mapscl,/keep,pos=pos_bot[*,1],opos=truepos,$
                  /noerase,missing_value=bad,missing_index=255,$
                  missing_color='white'
@@ -2549,13 +2474,13 @@ pro ifsf_makemaps,initproc
 ;            y = alog10(gaussian(x,[1d,0d,fwhm/2.35]))
 ;            cgoplot,x,y,color='Black'
 ;;           Moffat, index = 1.5
-;            y = alog10(drt_moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/1.5d)-1),1.5d]))
+;            y = alog10(moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/1.5d)-1),1.5d]))
 ;            cgoplot,x,y,color='Red',/linesty
 ;;           Moffat, index = 2.5
-;            y = alog10(drt_moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/2.5d)-1),2.5d]))
+;            y = alog10(moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/2.5d)-1),2.5d]))
 ;            cgoplot,x,y,color='Red'
 ;;           Moffat, index = 5
-;            y = alog10(drt_moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/5d)-1),5d]))
+;            y = alog10(moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/5d)-1),5d]))
 ;            cgoplot,x,y,color='Blue'
 ;         endif
          
@@ -2563,9 +2488,7 @@ pro ifsf_makemaps,initproc
 ;                           minval=zran[0]),max=zran[1],stretch=initmaps.ct.stretch)
          mapscl = cgimgscl(rebin(alog10(host_map),dx*samplefac,dy*samplefac,/sample),$
                         minval=zran[0],max=zran[1],stretch=initmaps.ct.stretch)
-         cgloadct,10,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-         stretch,0,255,0.7
-;         cgloadct,65,/reverse
+         cgloadct,65,/reverse
          cgimage,mapscl,/keep,pos=pos_bot[*,2],opos=truepos,$
                  /noerase,missing_value=bad,missing_index=255,$
                  missing_color='white'
@@ -2597,9 +2520,7 @@ pro ifsf_makemaps,initproc
 ;                              stretch=initmaps.ct.stretch)
             mapscl = cgimgscl(rebin(alog10(scatt_map),dx*samplefac,dy*samplefac,/sample),$
                         minval=zran[0],max=zran[1],stretch=initmaps.ct.stretch)
-            cgloadct,10,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-            stretch,0,255,0.7
-;            cgloadct,65,/reverse
+            cgloadct,65,/reverse
             cgimage,mapscl,/keep,pos=pos_bot[*,3],opos=truepos,$
                     /noerase,missing_value=bad,missing_index=255,$
                     missing_color='white'
@@ -2634,7 +2555,7 @@ pro ifsf_makemaps,initproc
    topmargin_in = 0.5d
    halfmargin_in = margin_in/2d
    xsize_in = xpanel_in*double(npx) + margin_in
-   aspectrat_fov=double(dx)/double(dy)
+   aspectrat_fov=double(dxwin)/double(dywin)
    ysize_in = xpanel_in/aspectrat_fov*double(npy) + $
               margin_in*(1.5d + (double(npy)-1)) + topmargin_in
 ;  Sizes and positions of image windows in real and normalized coordinates
@@ -2675,8 +2596,14 @@ pro ifsf_makemaps,initproc
 
    cbform = '(I0)' ; colorbar syntax
    stel_z = contcube.stel_z
-   stel_z_errlo = contcube.stel_z_err[*,*,0]
-   stel_z_errhi = contcube.stel_z_err[*,*,1]
+;  For backwards compatibility ...
+   if tag_exist(contcube,'stel_z_err') then begin
+      stel_z_errlo = contcube.stel_z_err[*,*,0]
+      stel_z_errhi = contcube.stel_z_err[*,*,1]
+   endif else begin
+      stel_z_errlo = stel_z * 0d
+      stel_z_errhi = stel_z * 0d
+   endelse
    igd = where(stel_z ne bad,ctgd)
 
    stel_vel = 0b
@@ -2700,7 +2627,7 @@ pro ifsf_makemaps,initproc
 ;     Set up range
       if hasrangefile then begin
          ithisline = where(rangeline eq 'stel' AND $
-                              rangequant eq 'vel',ctthisline)
+                           rangequant eq 'vel',ctthisline)
          if ctthisline eq 1 then auto=0b
       endif else auto=1b
       plotdat = ifsf_plotrange(auto=auto,$
@@ -2712,28 +2639,30 @@ pro ifsf_makemaps,initproc
                                rncbdiv=rangencbdiv,$
                                rlo=rangelo,rhi=rangehi)
 
-      mapscl = bytscl(rebin(map,dx*samplefac,dy*samplefac,/sample),$
+      mapscl = bytscl(rebin(map[plotwin[0]-1:plotwin[2]-1,$
+                                plotwin[1]-1:plotwin[3]-1],$
+                            dxwin*samplefac,dywin*samplefac,/sample),$
                       min=plotdat[0],max=plotdat[1])
-      cgloadct,22,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-;      cgloadct,74,/reverse
+      cgloadct,74,/reverse
       cgimage,mapscl,/keep,pos=pos_top[*,0],opos=truepos,$
               missing_value=bad,missing_index=255,$
               missing_color='white'
       cgplot,[0],xsty=5,ysty=5,position=truepos,$
-             /nodata,/noerase,xran=[0,dx],yran=[0,dy]
+             /nodata,/noerase,xran=[0,dxwin],yran=[0,dywin]
 ;     Velocity contours
       if tag_exist(initmaps,'contourlevels') then begin
          key = 'stel_vel'
          if initmaps.contourlevels->haskey(key) then begin
             nlevels = n_elements(initmaps.contourlevels[key])
-            cgcontour,map,dindgen(dx)+0.5,dindgen(dy)+0.5,$
+            cgcontour,map,dindgen(dxwin)+0.5,dindgen(dywin)+0.5,$
                       /overplot,color=0,c_linesty=2,c_thick=4,$
                       levels=initmaps.contourlevels[key],$
                       max=1000d
          endif
       endif
-      ifsf_plotaxesnuc,xran_kpc,yran_kpc,center_nuclei_kpc_x,$
-                       center_nuclei_kpc_y,/toplab
+      ifsf_plotaxesnuc,xwinran_kpc,ywinran_kpc,center_nuclei_kpc_xwin,$
+                       center_nuclei_kpc_ywin,/toplab
+                       
 ;     Colorbar
       xoffset = pan_xfrac*0.05
       yoffset = mar_yfrac*0.2
@@ -2766,17 +2695,18 @@ pro ifsf_makemaps,initproc
                                   rquant=rangequant,matquant='vel_err',$
                                   rncbdiv=rangencbdiv,$
                                   rlo=rangelo,rhi=rangehi)
-         mapscl = bytscl(rebin(maperr,dx*samplefac,dy*samplefac,/sample),$
-                               min=plotdat[0],max=plotdat[1])
-         cgloadct,22,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-;         cgloadct,74,/reverse
+         mapscl = bytscl(rebin(maperr[plotwin[0]-1:plotwin[2]-1,$
+                                      plotwin[1]-1:plotwin[3]-1],$
+                               dxwin*samplefac,dywin*samplefac,/sample),$
+                         min=plotdat[0],max=plotdat[1])
+         cgloadct,74,/reverse
          cgimage,mapscl,/keep,pos=pos_bot[*,0],opos=truepos,$
                  missing_value=bad,missing_index=255,$
                  missing_color='white',/noerase
          cgplot,[0],xsty=5,ysty=5,position=truepos,$
-                /nodata,/noerase,xran=[0,dx],yran=[0,dy]
-         ifsf_plotaxesnuc,xran_kpc,yran_kpc,center_nuclei_kpc_x,$
-                          center_nuclei_kpc_y,/noxlab
+                /nodata,/noerase,xran=[0,dxwin],yran=[0,dywin]
+         ifsf_plotaxesnuc,xwinran_kpc,ywinran_kpc,center_nuclei_kpc_xwin,$
+                          center_nuclei_kpc_ywin,/noxlab
 ;        Colorbar
          xoffset = pan_xfrac*0.05
          yoffset = mar_yfrac*0.2
@@ -2823,18 +2753,18 @@ pro ifsf_makemaps,initproc
                                   rncbdiv=rangencbdiv,$
                                   rlo=rangelo,rhi=rangehi)
 
-         mapscl = bytscl(rebin(map,dx*samplefac,dy*samplefac,/sample),$
+         mapscl = bytscl(rebin(map[plotwin[0]-1:plotwin[2]-1,$
+                                   plotwin[1]-1:plotwin[3]-1],$
+                               dxwin*samplefac,dywin*samplefac,/sample),$
                          min=plotdat[0],max=plotdat[1])
-         cgloadct,10,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-         stretch,0,255,0.7
-;         cgloadct,65,/reverse
+         cgloadct,65,/reverse
          cgimage,mapscl,/keep,pos=pos_top[*,1],opos=truepos,$
                  /noerase,missing_value=bad,missing_index=255,$
                  missing_color='white'
          cgplot,[0],xsty=5,ysty=5,position=truepos,$
-                /nodata,/noerase,xran=[0,dx],yran=[0,dy]
-         ifsf_plotaxesnuc,xran_kpc,yran_kpc,center_nuclei_kpc_x,$
-                          center_nuclei_kpc_y,/nolab
+                /nodata,/noerase,xran=[0,dxwin],yran=[0,dywin]
+         ifsf_plotaxesnuc,xwinran_kpc,ywinran_kpc,center_nuclei_kpc_xwin,$
+                          center_nuclei_kpc_ywin,/nolab
 ;        Colorbar
          xoffset = pan_xfrac*0.05
          yoffset = mar_yfrac*0.2
@@ -2867,17 +2797,18 @@ pro ifsf_makemaps,initproc
                                      rquant=rangequant,matquant='vsig_err',$
                                      rncbdiv=rangencbdiv,$
                                      rlo=rangelo,rhi=rangehi)
-            mapscl = bytscl(rebin(maperr,dx*samplefac,dy*samplefac,/sample),$
-                                  min=plotdat[0],max=plotdat[1])
-            cgloadct,22,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-;            cgloadct,74,/reverse
+            mapscl = bytscl(rebin(maperr[plotwin[0]-1:plotwin[2]-1,$
+                                         plotwin[1]-1:plotwin[3]-1],$
+                                  dxwin*samplefac,dywin*samplefac,/sample),$
+                            min=plotdat[0],max=plotdat[1])
+            cgloadct,74,/reverse
             cgimage,mapscl,/keep,pos=pos_bot[*,1],opos=truepos,$
                     missing_value=bad,missing_index=255,$
                     missing_color='white',/noerase
             cgplot,[0],xsty=5,ysty=5,position=truepos,$
-                   /nodata,/noerase,xran=[0,dx],yran=[0,dy]
-            ifsf_plotaxesnuc,xran_kpc,yran_kpc,center_nuclei_kpc_x,$
-                             center_nuclei_kpc_y,/nolab
+                   /nodata,/noerase,xran=[0,dxwin],yran=[0,dywin]
+            ifsf_plotaxesnuc,xwinran_kpc,ywinran_kpc,center_nuclei_kpc_xwin,$
+                             center_nuclei_kpc_ywin,/nolab
 ;           Colorbar
             xoffset = pan_xfrac*0.05
             yoffset = mar_yfrac*0.2
@@ -2927,18 +2858,18 @@ pro ifsf_makemaps,initproc
 
          plotdat_stel_ebv = plotdat
 
-         mapscl = bytscl(rebin(map,dx*samplefac,dy*samplefac,/sample),$
+         mapscl = bytscl(rebin(map[plotwin[0]-1:plotwin[2]-1,$
+                                   plotwin[1]-1:plotwin[3]-1],$
+                               dxwin*samplefac,dywin*samplefac,/sample),$
                          min=plotdat[0],max=plotdat[1])
-         cgloadct,10,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-         stretch,0,255,0.7
-;         cgloadct,65,/reverse
+         cgloadct,65,/reverse
          cgimage,mapscl,/keep,pos=pos_top[*,npx-1],opos=truepos,$
                  /noerase,missing_value=bad,missing_index=255,$
                  missing_color='white'
          cgplot,[0],xsty=5,ysty=5,position=truepos,$
-                /nodata,/noerase,xran=[0,dx],yran=[0,dy]
-         ifsf_plotaxesnuc,xran_kpc,yran_kpc,center_nuclei_kpc_x,$
-                          center_nuclei_kpc_y,/nolab
+                /nodata,/noerase,xran=[0,dxwin],yran=[0,dywin]
+         ifsf_plotaxesnuc,xwinran_kpc,ywinran_kpc,center_nuclei_kpc_xwin,$
+                          center_nuclei_kpc_ywin,/nolab
 ;        Colorbar
          xoffset = pan_xfrac*0.05
          yoffset = mar_yfrac*0.2
@@ -2971,17 +2902,18 @@ pro ifsf_makemaps,initproc
                                      rquant=rangequant,matquant='ebv_err',$
                                      rncbdiv=rangencbdiv,$
                                      rlo=rangelo,rhi=rangehi)
-            mapscl = bytscl(rebin(maperr,dx*samplefac,dy*samplefac,/sample),$
-                                  min=plotdat[0],max=plotdat[1])
-            cgloadct,22,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-;            cgloadct,74,/reverse
+            mapscl = bytscl(rebin(maperr[plotwin[0]-1:plotwin[2]-1,$
+                                         plotwin[1]-1:plotwin[3]-1],$
+                                  dxwin*samplefac,dywin*samplefac,/sample),$
+                            min=plotdat[0],max=plotdat[1])
+            cgloadct,74,/reverse
             cgimage,mapscl,/keep,pos=pos_bot[*,npx-1],opos=truepos,$
                     missing_value=bad,missing_index=255,$
                     missing_color='white',/noerase
             cgplot,[0],xsty=5,ysty=5,position=truepos,$
-                   /nodata,/noerase,xran=[0,dx],yran=[0,dy]
-            ifsf_plotaxesnuc,xran_kpc,yran_kpc,center_nuclei_kpc_x,$
-                             center_nuclei_kpc_y,/nolab
+                   /nodata,/noerase,xran=[0,dxwin],yran=[0,dywin]
+            ifsf_plotaxesnuc,xwinran_kpc,ywinran_kpc,center_nuclei_kpc_xwin,$
+                             center_nuclei_kpc_ywin,/nolab
 ;           Colorbar
             xoffset = pan_xfrac*0.05
             yoffset = mar_yfrac*0.2
@@ -3054,8 +2986,8 @@ pro ifsf_makemaps,initproc
       margin_in = 0.5d
       topmargin_in = 0.5d
       halfmargin_in = margin_in/1d
-      xsize_in = xpanel_in*double(npx) + margin_in*1.5
-      aspectrat_fov=double(dx)/double(dy)
+      xsize_in = xpanel_in*double(npx) + margin_in
+      aspectrat_fov=double(dxwin)/double(dywin)
       ysize_in = (xpanel_in * 1d/aspectrat_fov + margin_in)*2d + topmargin_in
 ;     Sizes and positions of image windows in real and normalized coordinates
       pan_xfrac = xpanel_in/xsize_in
@@ -3089,7 +3021,7 @@ pro ifsf_makemaps,initproc
 
          linelab = ifsf_linesyntax(line)
          cgps_open,initdat.mapdir+initdat.label+linelab+ '.eps',$
-                   charsize=1d*charscale,/encap,/inches,xs=xsize_in,ys=ysize_in,/qui,/nomatch
+                   charsize=1,/encap,/inches,xs=xsize_in,ys=ysize_in,/qui,/nomatch
 
 ;        loop through plot types
          for j=0,npx-1 do begin
@@ -3128,18 +3060,18 @@ pro ifsf_makemaps,initproc
                
                   map[igd] = map[igd]/zmax_flux[0]
                   if ctbd gt 0 then map[ibd] = bad
-                  mapscl = bytscl(rebin(map,dx*samplefac,dy*samplefac,/sample),$
+                  mapscl = bytscl(rebin(map[plotwin[0]-1:plotwin[2]-1,$
+                                            plotwin[1]-1:plotwin[3]-1],$
+                                  dxwin*samplefac,dywin*samplefac,/sample),$
                                   min=zran[0],max=zran[1])
    
 ;                 Plot image
-                  cgloadct,10,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-                  stretch,0,255,0.7
-;                  cgloadct,65,/reverse
+                  cgloadct,65,/reverse
                   cgimage,mapscl,/keep,pos=pos_top[*,j],opos=truepos,$
                           noerase=iplot ne 0,missing_value=bad,missing_index=255,$
                           missing_color='white'
                   cgplot,[0],xsty=5,ysty=5,position=truepos,$
-                         /nodata,/noerase,xran=[0,dx],yran=[0,dy]
+                         /nodata,/noerase,xran=[0,dxwin],yran=[0,dywin]
 ;                 Disk axes
                   linsty_da=[2,1]
                   if diskaxes_endpoints[0] ne 0b then $
@@ -3147,11 +3079,11 @@ pro ifsf_makemaps,initproc
                                           diskaxes_endpoints[*,1,k]+0.5d,$
                                           thick=4,linesty=linsty_da[k]
                   if j eq 0 then $
-                     ifsf_plotaxesnuc,xran_kpc,yran_kpc,center_nuclei_kpc_x,$
-                                      center_nuclei_kpc_y,/toplab $
+                     ifsf_plotaxesnuc,xwinran_kpc,ywinran_kpc,center_nuclei_kpc_xwin,$
+                                      center_nuclei_kpc_ywin,/toplab $
                   else $
-                     ifsf_plotaxesnuc,xran_kpc,yran_kpc,center_nuclei_kpc_x,$
-                                      center_nuclei_kpc_y,/nolab
+                     ifsf_plotaxesnuc,xwinran_kpc,ywinran_kpc,center_nuclei_kpc_xwin,$
+                                      center_nuclei_kpc_ywin,/nolab
 ;                 Colorbar
                   if j eq 1 then begin
                      xoffset = pan_xfrac*0.05
@@ -3211,34 +3143,39 @@ pro ifsf_makemaps,initproc
                   endif
  
                   if ctbd gt 0 then map[ibd] = bad
-                  mapscl = bytscl(rebin(map,dx*samplefac,dy*samplefac,/sample),$
+                  mapscl = bytscl(rebin(map[plotwin[0]-1:plotwin[2]-1,$
+                                            plotwin[1]-1:plotwin[3]-1],$
+                                  dxwin*samplefac,dywin*samplefac,/sample),$
                                   min=zran[0],max=zran[1])
    
 ;                 Plot image
-                  if stregex(vtags[j],'sig',/bool) then begin
-                     cgloadct,10,/brewer,/reverse
-                     stretch,0,255,0.7
-                  endif else cgloadct,22,/brewer,/reverse  ; MWL 2019-Jul-19: my color tables up to number 40 only
-;                  if stregex(vtags[j],'sig',/bool) then cgloadct,65,/reverse $
-;                  else cgloadct,74,/reverse
+                  if stregex(vtags[j],'sig',/bool) then cgloadct,65,/reverse $
+                  else cgloadct,74,/reverse
                   cgimage,mapscl,/keep,pos=pos_bot[*,j],opos=truepos,$
                           noerase=iplot ne 0,missing_value=bad,missing_index=255,$
                           missing_color='white'
                   cgplot,[0],xsty=5,ysty=5,position=truepos,$
-                         /nodata,/noerase,xran=[0,dx],yran=[0,dy]
+                         /nodata,/noerase,xran=[0,dxwin],yran=[0,dywin]
 ;                 Velocity contours
                   if tag_exist(initmaps,'contourlevels') then begin
                      key = line+'_'+vtags[j]
 ;                    Not sure why levels aren't being labeled
                      if initmaps.contourlevels->haskey(key) then begin
                         nlevels = n_elements(initmaps.contourlevels[key])
-                        cgcontour,map,dindgen(dx)+0.5,dindgen(dy)+0.5,$
-                                  /overplot,color=0,c_linesty=2,c_thick=4,$
-                                  levels=initmaps.contourlevels[key],$
-;                                  max=initmaps.contourmax[key]
-                                  max=1000d
-;                                  c_labels=dblarr(nlevels)+1b,$
-;                                  c_charsize=0.75
+                        if tag_exist(initmaps,'argscontour') then $
+                           cgcontour,map[plotwin[0]-1:plotwin[2]-1,$
+                                         plotwin[1]-1:plotwin[3]-1],$
+                                     dindgen(dxwin)+0.5,dindgen(dywin)+0.5,$
+                                     /overplot,$
+                                     levels=initmaps.contourlevels[key],$
+                                     _extra = initmaps.argscontour $
+                        else $
+                           cgcontour,map[plotwin[0]-1:plotwin[2]-1,$
+                                         plotwin[1]-1:plotwin[3]-1],$
+                                     dindgen(dxwin)+0.5,dindgen(dywin)+0.5,$
+                                     /overplot,color=0,c_linesty=2,c_thick=4,$
+                                     levels=initmaps.contourlevels[key],$
+                                     max=1000d
                      endif
                   endif
 ;;                 Cross section
@@ -3255,8 +3192,8 @@ pro ifsf_makemaps,initproc
 ;                     for k=0,1 do cgoplot,diskaxes_endpoints[*,0,k]+0.5d,$
 ;                                          diskaxes_endpoints[*,1,k]+0.5d,$
 ;                                          thick=4,linesty=linsty_da[k]
-                  ifsf_plotaxesnuc,xran_kpc,yran_kpc,center_nuclei_kpc_x,$
-                                   center_nuclei_kpc_y,/nolab
+                  ifsf_plotaxesnuc,xwinran_kpc,ywinran_kpc,center_nuclei_kpc_xwin,$
+                                   center_nuclei_kpc_ywin,/nolab
 ;                 Colorbar
                   xoffset = pan_xfrac*0.05
                   yoffset = mar_yfrac*0.2
@@ -3267,7 +3204,7 @@ pro ifsf_makemaps,initproc
                   ticknames[0]=' '
                   ticknames[ncbdiv]=' '
                   cgcolorbar,position=cbpos,divisions=ncbdiv,$
-                             ticknames=ticknames,charsize=0.6*charscale
+                             ticknames=ticknames,charsize=0.6
 ;                 Title
                   title=vtitles[j]
                   yoffset = mar_yfrac*0.85
@@ -3282,7 +3219,7 @@ pro ifsf_makemaps,initproc
 ;        Title
          cgplot,[0],xsty=5,ysty=5,position=[0,0,1,1],/nodata,/noerase
          cgtext,pos_title[0],pos_title[1],initdat.name+': '+linelabels[line],$
-                charsize=1.25d,align=0.5
+                charsize=1.25d,align=0.5,/normal ; 2020may06, DSNR, added /normal
  
          cgps_close
 
@@ -3734,7 +3671,7 @@ pro ifsf_makemaps,initproc
          margin_in = 0.5d
          topmargin_in = 0.25d
          halfmargin_in = margin_in/1d
-         xsize_in = xpanel_in*double(npx) + margin_in*1.5
+         xsize_in = xpanel_in*double(npx) + margin_in
          ysize_in = xpanel_in + margin_in*2d + topmargin_in
       ;  Sizes and positions of image windows in real and normalized coordinates
          pan_xfrac = xpanel_in/xsize_in
@@ -3810,13 +3747,13 @@ pro ifsf_makemaps,initproc
 ; Moffat index values chosen to match turbulence theory (5), IRAF default (2.5),
 ; and wingy profile (1.5). These are the same chosen by Trujillo et al. 2001.
 ;                    Moffat, index = 1.5
-                     y = alog10(drt_moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/1.5d)-1),1.5d]))
+                     y = alog10(moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/1.5d)-1),1.5d]))
                      cgoplot,x,y,color='Red',/linesty
 ;                    Moffat, index = 2.5
-                     y = alog10(drt_moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/2.5d)-1),2.5d]))
+                     y = alog10(moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/2.5d)-1),2.5d]))
                      cgoplot,x,y,color='Red'
 ;                    Moffat, index = 5
-                     y = alog10(drt_moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/5d)-1),5d]))
+                     y = alog10(moffat(x,[1d,0d,fwhm/2d/sqrt(2^(1/5d)-1),5d]))
                      cgoplot,x,y,color='Blue'
                   endif
 
@@ -6838,8 +6775,6 @@ pro ifsf_makemaps,initproc
     
       if linelist.haskey('Halpha') then ofcompline = 'Halpha' $
       else if linelist.haskey('Hbeta') then ofcompline = 'Hbeta' $
-      ; MWL 2019-12-27: Choose Lya over other ions
-      else if linelist.haskey('Lyalpha') then ofcompline = 'Lyalpha' $
       else begin
          linelistkeys = linelist.keys()
          ofcompline = linelistkeys[0]
@@ -6895,8 +6830,8 @@ pro ifsf_makemaps,initproc
 
 ;     Convert from flux/arcsec^2 back to straight flux
       if ctgd gt 0 then begin
-         map_fha[igd] *= initdat.platescale
-         map_fha_err[igd] *= initdat.platescale
+         map_fha[igd] *= initdat.platescale^2d
+         map_fha_err[igd] *= initdat.platescale^2d
          Rmax_kpc_ha = max(map_rkpc_ifs[igd])
 ;        Convert to Halpha flux using Case B
          if ofcompline eq 'Hbeta' then begin
@@ -6927,8 +6862,8 @@ pro ifsf_makemaps,initproc
          igd = where(mapr_fha gt 0d AND mapr_fha ne bad AND $
                      mapr_vha ge 0,ctgd)
          if ctgd gt 0 then begin
-            mapr_fha[igd] *= initdat.platescale
-            mapr_fha_err[igd] *= initdat.platescale
+            mapr_fha[igd] *= initdat.platescale^2d
+            mapr_fha_err[igd] *= initdat.platescale^2d
             Rmax_kpc_ha_red = max(map_rkpc_ifs[igd])
             Rmax_kpc_ha = Rmax_kpc_ha_red > Rmax_kpc_ha ? Rmax_kpc_ha_red : Rmax_kpc_ha
             if ofcompline eq 'Hbeta' then begin
@@ -7041,7 +6976,8 @@ pro ifsf_makemaps,initproc
                         mapr_vha gt 0,ctgoodr_ha)
 
 ;     Compute electron density to use
-      elecdenuse = dindgen(dx,dy) + elecden_default
+;      elecdenuse = dindgen(dx,dy) + elecden_default
+      elecdenuse = dblarr(dx,dy) + elecden_default
       elecdenuse_err = dblarr(dx,dy,2) + $
                        rebin(reform(elecden_err_default,1,1,2),dx,dy,2)
       elecdencomp = 'ftot'
@@ -7092,7 +7028,7 @@ pro ifsf_makemaps,initproc
                                   map_costheta_ha[igood_ha]
 ; 1d-7 converts from ergs/s to W
       map_l_ha[igood_ha] = $
-         drt_linelum(map_fha[igood_ha]*initdat.fluxunits,ldist,/ergs)
+         drt_linelum(map_fha[igood_ha]*initdat.fluxunits*1d-3,ldist,/ergs)
       map_m_ha[igood_ha] = mumpsm * map_l_ha[igood_ha] / $
                            volemis / elecdenuse[igood_ha]
                                 ; in units of msun
@@ -7121,7 +7057,7 @@ pro ifsf_makemaps,initproc
                                       map_costheta_ha[igood_ha]
 
       map_l_err_ha[igood_ha] = $
-         drt_linelum(map_fha_err[igood_ha]*initdat.fluxunits,ldist,/ergs)
+         drt_linelum(1d-3*map_fha_err[igood_ha]*initdat.fluxunits,ldist,/ergs)
          
 ;      map_m_err_ha[igood_ha] = mumpsm * map_l_err_ha[igood_ha] / $
 ;                               volemis / elecden
@@ -7216,7 +7152,7 @@ pro ifsf_makemaps,initproc
          mapr_vrad_ha[igoodr_ha] = abs(mapr_vha[igoodr_ha]) / $
                                       map_costheta_ha[igoodr_ha]
          mapr_l_ha[igoodr_ha] = $
-            drt_linelum(mapr_fha[igoodr_ha]*initdat.fluxunits,ldist,/ergs)
+            drt_linelum(1d-3*mapr_fha[igoodr_ha]*initdat.fluxunits,ldist,/ergs)
          mapr_m_ha[igoodr_ha] = mumpsm * mapr_l_ha[igoodr_ha] / $
                                 volemis / elecdenuse[igoodr_ha]
          mapr_dmdt_ha[igoodr_ha] = mapr_m_ha[igoodr_ha] * $
@@ -7235,7 +7171,7 @@ pro ifsf_makemaps,initproc
          mapr_vrad_err_ha[igoodr_ha] = abs(mapr_vha_err[igoodr_ha]) / $
                                          map_costheta_ha[igoodr_ha]
          mapr_l_err_ha[igoodr_ha] = $
-            drt_linelum(mapr_fha_err[igoodr_ha]*initdat.fluxunits,ldist,/ergs)
+            drt_linelum(1d-3*mapr_fha_err[igoodr_ha]*initdat.fluxunits,ldist,/ergs)
  
          for j=0,1 do begin
          xyind = array_indices(map_r,igoodr_ha)
@@ -8021,6 +7957,7 @@ pro ifsf_makemaps,initproc
 ;             Misc
               ofcompline: ofcompline,$
               e_of_flx: e_of_flx,$
+              e_total_flx: emlflxsums,$
 ;             Coordinates
               a_of: map_of_abs,$
               a_of_meanxy: a_of_meanxy,$
@@ -8058,7 +7995,10 @@ pro ifsf_makemaps,initproc
               dy: dy,$
               e_vel: emlvel, $
               e_flx: emlflx, $
+              e_flxcor_pp: emlflxcor_pp, $
+              e_flxcor_med: emlflxcor_med, $
               ebv: ebv, $
+              ebvmed: ebvmed,$
               errebv: errebv, $
               elecden: elecdenmap, $
               elecdenerrlo: elecdenmap_errlo, $
@@ -8082,6 +8022,14 @@ pro ifsf_makemaps,initproc
 
    save,emlvel,file=initdat.mapdir+initdat.label+'.emlvel.xdr'
 
+   if tag_exist(initmaps,'ebv') then begin
+      if tag_exist(initmaps.ebv,'calc') AND $
+         tag_exist(initmaps.ebv,'apply') then begin
+            save,emlflxcor_pp,file=initdat.mapdir+initdat.label+'.emlflxcor_pp.xdr'
+            save,emlflxcor_med,file=initdat.mapdir+initdat.label+'.emlflxcor_med.xdr'
+      endif
+   endif
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; OTHER PLOTS (GALAXY-SPECIFIC)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8091,6 +8039,7 @@ pro ifsf_makemaps,initproc
                ldist: ldist,$
                map_r: map_r,$
                map_rkpc_ifs: map_rkpc_ifs,$
+               map_rkpc_hst: map_rkpc_hst,$
                kpc_per_as: kpc_per_as,$
                kpc_per_pix: kpc_per_pix,$
                xran_kpc: xran_kpc,$
