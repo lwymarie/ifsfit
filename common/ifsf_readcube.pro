@@ -205,8 +205,8 @@ function ifsf_readcube,infile,header=header,quiet=quiet,oned=oned,$
   if keyword_set(mskOI) then begin
      OI5577 = ifsf_linelist('[OI]5577')
      OIwave = OI5577['[OI]5577']
-     tmp = min(abs(wave-OIwave-3)),ilo)
-     tmp = min(abs(wave-OIwave+3)),ihi)
+     tmp = min(abs(wave-OIwave-3),ilo)
+     tmp = min(abs(wave-OIwave+3),ihi)
      for i=1,ncols do begin
         for j=1,nrows do begin
             var[i-1,j-1,ilo:ihi] = 10d*max(var[i-1,j-1,ilo:ihi])
