@@ -511,7 +511,10 @@ function ifsf_fitspec,lambda,flux,err,dq,zstar,linelist,linelistz,$
      else begin
         peakinit = hash(initdat.lines)
         foreach line,initdat.lines do begin
-           peakinit[line] = interpol(gdflux_nocnt, gdlambda, linelistz[line])
+           ; MWL 2020-09-08: Set peak flux to zero if line not covered
+           if (linelistz[line])[0] ge gdlambda[0] and (linelistz[line])[0] le gdlambda[1] then $
+              peakinit[line] = interpol(gdflux_nocnt, gdlambda, linelistz[line]) $
+           else peakinit[line] = dblarr(size(linelistz[line],/dimensions))
            neg = where(peakinit[line] lt 0, ct)
            if ct gt 0 then peakinit[line,neg] = 0
         endforeach

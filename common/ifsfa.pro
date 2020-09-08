@@ -649,11 +649,20 @@ pro ifsfa,initproc,cols=cols,rows=rows,noplots=noplots,oned=oned,$
               qsomod_notweak = qsomod
               if tag_exist(initdat,'tweakcntfit') then begin
                  modresid = struct.cont_fit - struct.cont_fit_pretweak
-                 inz = where(qsomod ne 0 AND hostmod ne 0)
-                 qsofrac = dblarr(n_elements(qsomod))
-                 qsofrac[inz] = qsomod[inz]/(qsomod[inz]+hostmod[inz])
-                 qsomod += modresid*qsofrac
-                 hostmod += modresid*(1d - qsofrac)
+                 ; MWL 2020-09-07: Allow putting all tweaks to host model
+                 if ~tag_exist(initdat,'noqsofrac') then noqsofrac = 0b else $
+                    noqsofrac = initdat.noqsofrac
+                 if noqsofrac then begin
+                    hostmod += modresid
+                 endif else begin
+                    inz = where(qsomod ne 0 AND hostmod ne 0)
+                    qsofrac = dblarr(n_elements(qsomod))
+                    qsofrac[inz] = qsomod[inz]/(qsomod[inz]+hostmod[inz])
+                    ; MWL 2020-09-07: correct 0/0 values
+                    qsofrac[where(~finite(qsofrac))] = 0d
+                    qsomod += modresid*qsofrac
+                    hostmod += modresid*(1d - qsofrac)
+                  endelse
               endif
 ;             Components of QSO fit for plotting
 ;              qsomod_normonly = qsoflux*par_qsohost[fitord+1]
