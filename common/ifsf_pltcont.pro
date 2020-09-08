@@ -158,7 +158,7 @@ pro ifsf_pltcont,instr,outfile,compspec=compspec,comptitles=comptitles,$
      OIlo = min(abs(wave[i1]-(OIwave-3)),iOIlo)
      OIhi = min(abs(wave[i1]-(OIwave+4.6)),iOIhi)  ; to cover vacuum wavelengths
      iclean = i1
-     remove,findgen(iOIhii-OIlo+1)+iOIlo,iclean
+     remove,findgen(iOIhi-iOIlo+1)+iOIlo,iclean
      if keyword_set(yranminmax) then $
         yran = [min([ydat[iclean],ymod[iclean]]),max([ydat[iclean],ymod[iclean]])] $
      else $
